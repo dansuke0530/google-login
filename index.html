@@ -11,7 +11,6 @@
         .card { border: 1px solid #ddd; padding: 20px; border-radius: 8px; margin-bottom: 20px; background: #fafafa; }
         button { cursor: pointer; padding: 10px 20px; background: #00A3A0; color: white; border: none; border-radius: 4px; }
         button:hover { opacity: 0.9; }
-        code { background: #eee; padding: 2px 5px; border-radius: 4px; }
     </style>
 </head>
 <body>
@@ -33,19 +32,20 @@
 
     <script>
         // ==========================================
-        // 2. 初期設定（ここがアプリの心臓部）
+        // 2. 初期設定（ここを修正しました！）
         // ==========================================
         const supabaseUrl = 'https://daexakehxcvspmthpzzf.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhZXhha2VoeGN2c3BtdGhwenpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyMjc0ODgsImV4cCI6MjA4MzgwMzQ4OH0.xpHRjDPWlch_D80v1QQ9k_CJV6Q39pDa5f9qQ470rMI';
         
-        // クライアントを作成（これを使ってSupabaseと会話します）
-        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        // ★★★ 変更点：変数名を 'supabase' から 'supabaseClient' に変更 ★★★
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
         // ==========================================
         // 3. 認証機能（ログイン・ログアウト）
         // ==========================================
         async function signIn() {
-            const { error } = await supabase.auth.signInWithOAuth({
+            // ここも 'supabaseClient' を使う
+            const { error } = await supabaseClient.auth.signInWithOAuth({
                 provider: 'google',
                 options: { redirectTo: window.location.href }
             });
@@ -53,7 +53,8 @@
         }
 
         async function signOut() {
-            const { error } = await supabase.auth.signOut();
+            // ここも 'supabaseClient' を使う
+            const { error } = await supabaseClient.auth.signOut();
             if (!error) location.reload();
         }
 
@@ -64,11 +65,11 @@
             const display = document.getElementById('data-area');
             display.innerHTML = '読み込み中...';
 
-            // 'events' テーブルから全データを取得
-            const { data, error } = await supabase
+            // ここも 'supabaseClient' を使う
+            const { data, error } = await supabaseClient
                 .from('events')
                 .select('*')
-                .limit(5); // とりあえず5件だけ
+                .limit(5);
 
             if (error) {
                 display.innerHTML = `<span style="color:red">エラー: ${error.message}</span>`;
@@ -77,17 +78,18 @@
             } else {
                 display.innerHTML = data.map(item => `
                     <div style="border-bottom:1px solid #ccc; padding:5px;">
-                        <strong>${item.title}</strong> (${item.date})
+                        <strong>${item.title}</strong> (${new Date(item.date).toLocaleDateString()})
                     </div>
                 `).join('');
             }
         }
 
         // ==========================================
-        // 5. 状態監視（ページを開いた時の処理）
+        // 5. 状態監視
         // ==========================================
         async function checkUser() {
-            const { data: { session } } = await supabase.auth.getSession();
+            // ここも 'supabaseClient' を使う
+            const { data: { session } } = await supabaseClient.auth.getSession();
             const status = document.getElementById('auth-status');
             const loginBtn = document.getElementById('login-btn');
             const logoutBtn = document.getElementById('logout-btn');
@@ -103,7 +105,6 @@
             }
         }
 
-        // 起動時にチェックを実行
         checkUser();
     </script>
 </body>
