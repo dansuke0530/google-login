@@ -10,7 +10,6 @@
         .box { background: white; padding: 30px; border-radius: 15px; max-width: 500px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         h1 { color: #333; }
         
-        /* ボタンのデザイン */
         button { 
             padding: 12px 24px; 
             font-size: 16px; 
@@ -53,7 +52,7 @@
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhZXhha2VoeGN2c3BtdGhwenpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyMjc0ODgsImV4cCI6MjA4MzgwMzQ4OH0.xpHRjDPWlch_D80v1QQ9k_CJV6Q39pDa5f9qQ470rMI';
         // ★★★ 設定終わり ★★★
 
-        // Supabaseクライアントを作成（ここが2回あるとエラーになる！）
+        // Supabaseクライアントを作成
         const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
         // 1. Googleログイン処理
