@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>イベント登録 - Admin</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: sans-serif; background-color: #f9f9f9; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #333; }
+        label { display: block; margin-top: 15px; font-weight: bold; color: #555; }
+        input, textarea { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background-color: #00A3A0; color: white; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 20px; }
+        button:hover { opacity: 0.9; }
+        .back-link { display: block; text-align: center; margin-top: 20px; color: #666; text-decoration: none; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>📝 イベント登録</h1>
+        
+        <label>イベント名</label>
+        <input type="text" id="title" placeholder="例：Webデザイン勉強会">
+
+        <label>開催日</label>
+        <input type="date" id="date">
+
+        <label>詳細内容</label>
+        <textarea id="description" rows="5" placeholder="イベントの詳細を入力..."></textarea>
+
+        <button onclick="addEvent()">登録する</button>
+
+        <a href="mypage.html" class="back-link">← マイページに戻る</a>
+    </div>
+
+    <script>
+        // Supabase設定
+        const supabaseUrl = 'https://daexakehxcvspmthpzzf.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhZXhha2VoeGN2c3BtdGhwenpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyMjc0ODgsImV4cCI6MjA4MzgwMzQ4OH0.xpHRjDPWlch_D80v1QQ9k_CJV6Q39pDa5f9qQ470rMI';
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+        // 1. 門番（ログインチェック）
+        async function checkAuth() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session) {
+                alert("ログインしてください");
+                window.location.href = 'login.html';
+            }
+        }
+        checkAuth();
+
+        // 2. イベント登録処理
+        async function addEvent() {
+            const title = document.getElementById('title').value;
+            const date = document.getElementById('date').value;
+            const description = document.getElementById('description').value;
+
+            if (!title || !date) {
+                alert("タイトルと日付は必須だよ！");
+                return;
+            }
+
+            // Supabaseにデータを送る！
+            const { error } = await supabaseClient
+                .from('events')
+                .insert([{ title: title, date: date }]);
+            
+            // ※今回は簡単にするため 'description' はまだ保存しない設定にしてあるよ
+            // もしdescriptionも保存したかったら、Supabase側でカラム追加が必要！
+
+            if (error) {
+                alert("エラー発生: " + error.message);
+            } else {
+                alert("🎉 登録しました！");
+                // 入力欄をクリア
+                document.getElementById('title').value = '';
+                document.getElementById('date').value = '';
+                document.getElementById('description').value = '';
+            }
+        }
+    </script>
+</body>
+</html>
