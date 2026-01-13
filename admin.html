@@ -36,48 +36,40 @@
     </div>
 
     <script>
-        // Supabase設定
         const supabaseUrl = 'https://daexakehxcvspmthpzzf.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhZXhha2VoeGN2c3BtdGhwenpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyMjc0ODgsImV4cCI6MjA4MzgwMzQ4OH0.xpHRjDPWlch_D80v1QQ9k_CJV6Q39pDa5f9qQ470rMI';
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-        // 1. 門番（ログインチェック）
+        // 1. ログインチェック
         async function checkAuth() {
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (!session) {
-                alert("ログインしてください");
                 window.location.href = 'login.html';
             }
         }
         checkAuth();
 
-        // 2. イベント登録処理
+        // 2. 登録処理
         async function addEvent() {
             const title = document.getElementById('title').value;
             const date = document.getElementById('date').value;
-            const description = document.getElementById('description').value;
-
+            // descriptionは今回まだ保存しないけど、箱だけ用意
+            
             if (!title || !date) {
                 alert("タイトルと日付は必須だよ！");
                 return;
             }
 
-            // Supabaseにデータを送る！
             const { error } = await supabaseClient
                 .from('events')
                 .insert([{ title: title, date: date }]);
-            
-            // ※今回は簡単にするため 'description' はまだ保存しない設定にしてあるよ
-            // もしdescriptionも保存したかったら、Supabase側でカラム追加が必要！
 
             if (error) {
-                alert("エラー発生: " + error.message);
+                alert("エラー: " + error.message);
             } else {
                 alert("🎉 登録しました！");
-                // 入力欄をクリア
                 document.getElementById('title').value = '';
                 document.getElementById('date').value = '';
-                document.getElementById('description').value = '';
             }
         }
     </script>
