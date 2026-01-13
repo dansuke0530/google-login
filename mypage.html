@@ -13,8 +13,9 @@
         h2 { color: #333; }
         .btn-logout { background: #666; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; }
         .menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 30px; }
-        .menu-item { background: #eef2f5; padding: 20px; border-radius: 8px; cursor: pointer; transition: 0.3s; text-decoration: none; color: #333; font-weight: bold; display: block; }
+        .menu-item { background: #eef2f5; padding: 20px; border-radius: 8px; cursor: pointer; transition: 0.3s; text-decoration: none; color: #333; font-weight: bold; display: block; text-align: center; }
         .menu-item:hover { background: #dfe6eb; transform: translateY(-2px); }
+        .icon { font-size: 40px; display: block; margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -30,11 +31,14 @@
         </div>
 
         <div class="menu-grid">
-            <a href="#" class="menu-item" onclick="alert('次はこれを作るよ！')">
-                📝 イベントを登録する<br>(Admin)
+            <a href="admin.html" class="menu-item">
+                <span class="icon">📝</span>
+                イベントを登録する<br>(Admin)
             </a>
-            <a href="admin.html" class="menu-item" onclick="alert('ここでお客さん用の画面が見れるようにするよ！')">
-                🌏 公開ページを見る<br>(Public)
+
+            <a href="index.html" class="menu-item">
+                <span class="icon">🌏</span>
+                公開ページを見る<br>(Public)
             </a>
         </div>
     </div>
@@ -44,20 +48,18 @@
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhZXhha2VoeGN2c3BtdGhwenpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyMjc0ODgsImV4cCI6MjA4MzgwMzQ4OH0.xpHRjDPWlch_D80v1QQ9k_CJV6Q39pDa5f9qQ470rMI';
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-        // 1. 門番：ログインしてないやつは「ログイン画面」へ強制送還！
+        // 1. ログインチェック
         async function checkAuth() {
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (!session) {
-                // ログインしてない！戻れ！
                 window.location.href = 'login.html';
             } else {
-                // 通ってよし！メアドを表示
                 document.getElementById('user-email').innerText = session.user.email + ' さん';
             }
         }
         checkAuth();
 
-        // 2. ログアウト処理
+        // 2. ログアウト
         async function signOut() {
             await supabaseClient.auth.signOut();
             window.location.href = 'login.html';
