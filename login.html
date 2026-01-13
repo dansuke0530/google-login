@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ログイン - EventApp</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background-color: #f0f2f5; }
+        .login-card { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: center; width: 100%; max-width: 400px; }
+        h1 { margin-bottom: 20px; color: #333; font-size: 24px; }
+        p { color: #666; margin-bottom: 30px; }
+        .btn-google {
+            background-color: #4285F4; color: white; border: none; padding: 12px 24px;
+            font-size: 16px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold;
+            transition: 0.2s;
+        }
+        .btn-google:hover { opacity: 0.9; }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <h1>イベント管理アプリ</h1>
+        <p>関係者専用ログイン画面です</p>
+        <button class="btn-google" onclick="signIn()">Googleアカウントでログイン</button>
+    </div>
+
+    <script>
+        const supabaseUrl = 'https://daexakehxcvspmthpzzf.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhZXhha2VoeGN2c3BtdGhwenpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyMjc0ODgsImV4cCI6MjA4MzgwMzQ4OH0.xpHRjDPWlch_D80v1QQ9k_CJV6Q39pDa5f9qQ470rMI';
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+        // 1. すでにログイン済みならマイページへ飛ばす
+        async function checkSession() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) {
+                window.location.href = 'mypage.html';
+            }
+        }
+        checkSession();
+
+        // 2. ログイン処理
+        async function signIn() {
+            const { error } = await supabaseClient.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    // ★ここ重要！ログイン成功後の行き先を指定
+                    redirectTo: 'https://dansuke0530.github.io/google-login/mypage.html'
+                }
+            });
+            if (error) alert(error.message);
+        }
+    </script>
+</body>
+</html>
