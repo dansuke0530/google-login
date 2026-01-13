@@ -17,65 +17,105 @@
 <p class="p1">&lt;head&gt;</p>
 <p class="p1"><span class="Apple-converted-space">    </span>&lt;meta charset="UTF-8"&gt;</p>
 <p class="p1"><span class="Apple-converted-space">    </span>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;title&gt;管理者: イベント追加&lt;/title&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;title&gt;管理者: イベント追加 - Supabase&lt;/title&gt;</p>
 <p class="p1"><span class="Apple-converted-space">    </span>&lt;script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"&gt;&lt;/script&gt;</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
 <p class="p1"><span class="Apple-converted-space">    </span>&lt;style&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>body { font-family: sans-serif; padding: 20px; background: #f4f7f6; }</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }</p>
-<p class="p1"><span class="Apple-converted-space">        </span>h2 { text-align:center; color:#00A3A0; margin-bottom: 20px; }</p>
-<p class="p1"><span class="Apple-converted-space">        </span>input, textarea, button { width: 100%; margin-bottom: 15px; padding: 12px; box-sizing: border-box; border: 1px solid #ddd; border-radius: 5px; }</p>
-<p class="p1"><span class="Apple-converted-space">        </span>textarea { height: 100px; }</p>
-<p class="p1"><span class="Apple-converted-space">        </span>button { background: #0ABAB5; color: white; border: none; font-weight: bold; cursor: pointer; font-size: 1.1em; }</p>
-<p class="p1"><span class="Apple-converted-space">        </span>button:hover { background: #008f8c; }</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.back-link { display: block; text-align: center; margin-top: 10px; text-decoration: none; color: #666; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; background-color: #f4f7f6; color: #333; line-height: 1.6; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.container { max-width: 600px; margin: 20px auto; background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>h1 { color: #00A3A0; text-align: center; margin-bottom: 20px; font-weight: 600; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.form-group { margin-bottom: 20px; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.form-group label { display: block; margin-bottom: 5px; font-weight: 600; color: #333; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.form-group input[type="text"], .form-group input[type="date"], .form-group textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 1em; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.form-group textarea { resize: vertical; min-height: 100px; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>#register-button { width: 100%; padding: 15px; background-color: #0ABAB5; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1.1em; font-weight: bold; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>#register-button:hover { background-color: #008f8c; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>#message { margin-top: 20px; padding: 15px; border-radius: 5px; text-align: center; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.success { background-color: #d4edda; color: #155724; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.error { background-color: #f8d7da; color: #721c24; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.back-link { display: block; text-align: center; margin-top: 20px; text-decoration: none; color: #666; }</p>
 <p class="p1"><span class="Apple-converted-space">    </span>&lt;/style&gt;</p>
 <p class="p1">&lt;/head&gt;</p>
 <p class="p1">&lt;body&gt;</p>
 <p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="container"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;h2&gt;📝 イベント登録&lt;/h2&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;h1&gt;イベント新規追加&lt;/h1&gt;</p>
 <p class="p1"><span class="Apple-converted-space">        </span>&lt;form id="addEventForm"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;input type="text" id="title" placeholder="イベント名 (例: クリスマスパーティー)" required&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;input type="date" id="date" required&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;input type="text" id="location" placeholder="開催場所 (例: 東京ドーム)" required&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;textarea id="description" placeholder="詳細説明" required&gt;&lt;/textarea&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;input type="text" id="imageUrl" placeholder="画像URL (Supabase StorageのURL)"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;input type="text" id="tags" placeholder="タグ (カンマ区切り: AI, 交流会)"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;button type="submit"&gt;登録する&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="form-group"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;label for="eventTitle"&gt;イベントタイトル:&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;input type="text" id="eventTitle" required&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="form-group"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;label for="eventDate"&gt;開催日:&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;input type="date" id="eventDate" required&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="form-group"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;label for="eventLocation"&gt;開催場所:&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;input type="text" id="eventLocation" required&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="form-group"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;label for="eventDescription"&gt;詳細説明:&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;textarea id="eventDescription" required&gt;&lt;/textarea&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="form-group"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;label for="eventImageUrl"&gt;画像URL (Supabase StorageのURL):&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;input type="text" id="eventImageUrl" placeholder="https://..."&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="form-group"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;label for="eventTags"&gt;タグ (カンマ区切り):&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;input type="text" id="eventTags" placeholder="例: AI, 交流会"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;button type="submit" id="register-button"&gt;イベントを登録&lt;/button&gt;</p>
 <p class="p1"><span class="Apple-converted-space">        </span>&lt;/form&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div id="message"&gt;&lt;/div&gt;</p>
 <p class="p1"><span class="Apple-converted-space">        </span>&lt;a href="index.html" class="back-link"&gt;一覧に戻る&lt;/a&gt;</p>
 <p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
 <p class="p2"><br></p>
 <p class="p1"><span class="Apple-converted-space">    </span>&lt;script&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>// ★★★ ↓ここだけ書き換えて！↓ ★★★</p>
+<p class="p1"><span class="Apple-converted-space">        </span>// ★★★ Supabase設定 ★★★</p>
 <p class="p1"><span class="Apple-converted-space">        </span>const supabaseUrl = 'https://daexakehxcvspmthpzzf.supabase.co';</p>
-<p class="p1"><span class="Apple-converted-space">        </span>const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhZXhha2VoeGN2c3BtdGhwenpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyMjc0ODgsImV4cCI6MjA4MzgwMzQ4OH0.xpHRjDPWlch_D80v1QQ9k_CJV6Q39pDa5f9qQ470rMI';<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">        </span>// ★★★ ↑ここまで↑ ★★★</p>
-<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhZXhha2VoeGN2c3BtdGhwenpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyMjc0ODgsImV4cCI6MjA4MzgwMzQ4OH0.xpHRjDPWlch_D80v1QQ9k_CJV6Q39pDa5f9qQ470rMI';</p>
 <p class="p1"><span class="Apple-converted-space">        </span>const supabase = supabase.createClient(supabaseUrl, supabaseKey);</p>
 <p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>document.getElementById('addEventForm').addEventListener('submit', async (e) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const addEventForm = document.getElementById('addEventForm');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const messageDiv = document.getElementById('message');</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>function displayMessage(text, isSuccess) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>messageDiv.textContent = text;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>messageDiv.className = isSuccess ? 'success' : 'error';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>setTimeout(() =&gt; { messageDiv.textContent = ''; messageDiv.className = ''; }, 3000);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>addEventForm.addEventListener('submit', async function(e) {</p>
 <p class="p1"><span class="Apple-converted-space">            </span>e.preventDefault();</p>
 <p class="p2"><span class="Apple-converted-space">            </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>const title = document.getElementById('title').value;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const date = document.getElementById('date').value;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const location = document.getElementById('location').value;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const description = document.getElementById('description').value;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const imageUrl = document.getElementById('imageUrl').value;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>// タグを配列に変換</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const tags = document.getElementById('tags').value.split(',').map(t =&gt; t.trim()).filter(t =&gt; t);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const title = document.getElementById('eventTitle').value;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const date = document.getElementById('eventDate').value;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const location = document.getElementById('eventLocation').value;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const description = document.getElementById('eventDescription').value;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const imageUrl = document.getElementById('eventImageUrl').value;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const tags = document.getElementById('eventTags').value.split(',').map(t =&gt; t.trim()).filter(t =&gt; t);</p>
 <p class="p2"><br></p>
 <p class="p1"><span class="Apple-converted-space">            </span>try {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>// Supabaseへインサート</p>
 <p class="p1"><span class="Apple-converted-space">                </span>const { error } = await supabase</p>
 <p class="p1"><span class="Apple-converted-space">                    </span>.from('events')</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>.insert([{ title, date, location, description, image_url: imageUrl, tags }]);</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>.insert([{<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                        </span>title,<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                        </span>date,<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                        </span>location,<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                        </span>description,<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                        </span>image_url: imageUrl,<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                        </span>tags<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>}]);</p>
 <p class="p2"><br></p>
 <p class="p1"><span class="Apple-converted-space">                </span>if (error) throw error;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">                </span>alert('🎉 イベントを登録しました！');</p>
-<p class="p1"><span class="Apple-converted-space">                </span>e.target.reset();</p>
+<p class="p2"><span class="Apple-converted-space">                </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>displayMessage("🎉 イベントが正常に登録されました。", true);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>addEventForm.reset();</p>
+<p class="p2"><span class="Apple-converted-space">                </span></p>
 <p class="p1"><span class="Apple-converted-space">            </span>} catch (error) {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>alert('エラーが発生しました: ' + error.message);</p>
-<p class="p1"><span class="Apple-converted-space">                </span>console.error(error);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>console.error("エラー:", error);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>displayMessage("登録失敗: " + error.message, false);</p>
 <p class="p1"><span class="Apple-converted-space">            </span>}</p>
 <p class="p1"><span class="Apple-converted-space">        </span>});</p>
 <p class="p1"><span class="Apple-converted-space">    </span>&lt;/script&gt;</p>

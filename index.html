@@ -17,67 +17,267 @@
 <p class="p1">&lt;head&gt;</p>
 <p class="p1"><span class="Apple-converted-space">    </span>&lt;meta charset="UTF-8"&gt;</p>
 <p class="p1"><span class="Apple-converted-space">    </span>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;title&gt;イベントリスト&lt;/title&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;title&gt;イベントリスト - Supabase Edition&lt;/title&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"&gt;&lt;/script&gt;</p>
 <p class="p1"><span class="Apple-converted-space">    </span>&lt;script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"&gt;&lt;/script&gt;</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
 <p class="p1"><span class="Apple-converted-space">    </span>&lt;style&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; color: #333; margin: 0; padding: 20px; }</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.container { max-width: 800px; margin: 0 auto; }</p>
-<p class="p1"><span class="Apple-converted-space">        </span>h1 { text-align: center; color: #00A3A0; margin-bottom: 30px; }</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.event-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.event-image { width: 100%; height: 200px; object-fit: cover; border-radius: 8px; margin-bottom: 15px; }</p>
-<p class="p1"><span class="Apple-converted-space">        </span>h3 { margin: 0 0 10px; color: #333; font-size: 1.4em; }</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.meta { color: #666; font-size: 0.9em; margin-bottom: 15px; display: flex; gap: 15px; }</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.description { line-height: 1.6; margin-bottom: 15px; }</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.tags span { display: inline-block; background: #e0f2f1; color: #00695c; padding: 4px 10px; border-radius: 15px; font-size: 0.85em; margin-right: 5px; }</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.admin-link { text-align: center; margin-top: 40px; }</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.admin-link a { color: #999; text-decoration: none; font-size: 0.8em; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; background-color: #f4f7f6; color: #333; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.container { max-width: 1200px; margin: 0 auto; padding: 20px; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>h1 { color: #00A3A0; text-align: center; margin: 20px 0; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>#fixed-header { position: sticky; top: 0; z-index: 1000; background: white; padding: 10px 20px; border-bottom: 1px solid #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>#search-controls { display: flex; gap: 10px; margin: 10px 0; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>#search-input { flex-grow: 1; padding: 8px; border-radius: 20px; border: 1px solid #ddd; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>#tag-list { padding: 10px 0; overflow-x: auto; white-space: nowrap; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.tag-button { background: white; margin-right: 5px; border-radius: 15px; padding: 5px 10px; border: 1px solid #ddd; font-size: 0.85em; cursor: pointer;}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.tag-button.active { background: #0ABAB5; color: white; }</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>.main-content { display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>#events-list { flex: 1; min-width: 300px; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>#calendar-view { width: 280px; display: flex; flex-direction: column; gap: 20px; position: sticky; top: 150px; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.calendar-container { background: white; padding: 10px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.calendar-box { font-size: 11px; }</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>.fc .fc-day-sun { background-color: #fff5f5 !important; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.fc .fc-day-sun .fc-col-header-cell-cushion, .fc .fc-day-sun .fc-daygrid-day-number { color: #EA4335 !important; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.fc .fc-day-sat { background-color: #f5faff !important; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.fc .fc-day-sat .fc-col-header-cell-cushion, .fc .fc-day-sat .fc-daygrid-day-number { color: #4285F4 !important; }</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>.event-card { background: white; border-radius: 12px; padding: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: relative; display: flex; flex-direction: column; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.event-image { width: 100%; height: 160px; object-fit: cover; border-radius: 8px; margin-bottom: 10px; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.favorite-button { position: absolute; top: 10px; right: 10px; cursor: pointer; font-size: 20px; background: white; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; z-index: 10; border: 1px solid #eee; }</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>.action-buttons { display: flex; gap: 5px; margin-top: 10px; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.calendar-button, .line-button, .mail-button { flex: 1; font-size: 0.65em; padding: 10px 2px; text-decoration: none; text-align: center; border-radius: 20px; font-weight: bold; color: white !important; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.calendar-button { background: #4285F4; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.mail-button { background: #EA4335; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.line-button { background: #06C755; }</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>/* レビュー用 */</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.review-section { margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; font-size: 0.85em; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.review-form { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.star-input { color: #ddd; font-size: 1.5em; cursor: pointer; display: inline-block; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.star-input.active { color: #ffc107; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.review-input { width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.review-item { background: #f9f9f9; padding: 8px; border-radius: 8px; margin-bottom: 5px; position: relative; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.review-header { display: flex; justify-content: space-between; font-weight: bold; font-size: 0.8em; color: #666; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.review-stars { color: #ffc107; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.review-text { margin-top: 3px; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.delete-review { color: #ff4d4d; cursor: pointer; font-size: 0.8em; text-decoration: underline; }</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>@media (max-width: 600px) { #calendar-view { width: 100%; position: static; order: -1; margin-bottom: 20px; } }</p>
 <p class="p1"><span class="Apple-converted-space">    </span>&lt;/style&gt;</p>
 <p class="p1">&lt;/head&gt;</p>
 <p class="p1">&lt;body&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="fixed-header"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="container"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;h1&gt;EVENT LIST&lt;/h1&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div id="search-controls"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;input type="text" id="search-input" placeholder="検索..."&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;button id="search-button" style="padding: 8px 16px; background:#0ABAB5; color:white; border:none; border-radius:20px; cursor:pointer;"&gt;検索&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div id="tag-list"&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div style="text-align: right; margin-top: 5px;"&gt;&lt;a href="admin-add-event.html" style="font-size: 0.8em; color: #666;"&gt;管理者ページへ&lt;/a&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
 <p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="container"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;h1&gt;🎄 イベント一覧&lt;/h1&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;div id="events-list"&gt;読み込み中...&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="admin-link"&gt;&lt;a href="admin.html"&gt;管理者ページへ&lt;/a&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="main-content"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div id="events-list"&gt;読み込み中...&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div id="calendar-view"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="calendar-container"&gt;&lt;div id="calendar-now" class="calendar-box"&gt;&lt;/div&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="calendar-container"&gt;&lt;div id="calendar-next" class="calendar-box"&gt;&lt;/div&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
 <p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
 <p class="p2"><br></p>
 <p class="p1"><span class="Apple-converted-space">    </span>&lt;script&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>// ★★★ ↓ここだけ書き換えて！↓ ★★★</p>
+<p class="p1"><span class="Apple-converted-space">        </span>// ★★★ Supabase設定 ★★★</p>
 <p class="p1"><span class="Apple-converted-space">        </span>const supabaseUrl = 'https://daexakehxcvspmthpzzf.supabase.co';</p>
-<p class="p1"><span class="Apple-converted-space">        </span>const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhZXhha2VoeGN2c3BtdGhwenpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyMjc0ODgsImV4cCI6MjA4MzgwMzQ4OH0.xpHRjDPWlch_D80v1QQ9k_CJV6Q39pDa5f9qQ470rMI';<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">        </span>// ★★★ ↑ここまで↑ ★★★</p>
-<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhZXhha2VoeGN2c3BtdGhwenpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyMjc0ODgsImV4cCI6MjA4MzgwMzQ4OH0.xpHRjDPWlch_D80v1QQ9k_CJV6Q39pDa5f9qQ470rMI';</p>
 <p class="p1"><span class="Apple-converted-space">        </span>const supabase = supabase.createClient(supabaseUrl, supabaseKey);</p>
 <p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>async function loadEvents() {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const { data: events, error } = await supabase</p>
-<p class="p1"><span class="Apple-converted-space">                </span>.from('events')</p>
-<p class="p1"><span class="Apple-converted-space">                </span>.select('*')</p>
-<p class="p1"><span class="Apple-converted-space">                </span>.order('date', { ascending: true });</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">            </span>if (error) {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>console.error(error);</p>
-<p class="p1"><span class="Apple-converted-space">                </span>document.getElementById('events-list').innerText = 'エラーが発生しました: ' + error.message;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>return;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">            </span>const list = document.getElementById('events-list');</p>
-<p class="p1"><span class="Apple-converted-space">            </span>list.innerHTML = events.map(event =&gt; `</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="event-card"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>${event.image_url ? `&lt;img src="${event.image_url}" class="event-image"&gt;` : ''}</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;h3&gt;${event.title}&lt;/h3&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="meta"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;span&gt;📅 ${new Date(event.date).toLocaleDateString()}&lt;/span&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;span&gt;📍 ${event.location}&lt;/span&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;p class="description"&gt;${event.description}&lt;/p&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="tags"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>${(event.tags || []).map(tag =&gt; `&lt;span&gt;#${tag}&lt;/span&gt;`).join('')}</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>`).join('') || '&lt;p style="text-align:center"&gt;イベントがまだ登録されていません🎅&lt;/p&gt;';</p>
+<p class="p1"><span class="Apple-converted-space">        </span>let allEvents = [];</p>
+<p class="p1"><span class="Apple-converted-space">        </span>let favIds = new Set();</p>
+<p class="p1"><span class="Apple-converted-space">        </span>let currentTag = '';</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// 簡易的なユーザーID生成（ログイン機能の代わり）</p>
+<p class="p1"><span class="Apple-converted-space">        </span>let userId = localStorage.getItem('my_temp_user_id');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (!userId) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>userId = 'user_' + Math.random().toString(36).substr(2, 9);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>localStorage.setItem('my_temp_user_id', userId);</p>
 <p class="p1"><span class="Apple-converted-space">        </span>}</p>
 <p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>loadEvents();</p>
+<p class="p1"><span class="Apple-converted-space">        </span>function initCalendar(events) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const calendarEvents = events.map(e =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>// Supabaseの日付文字列をJSのDateオブジェクトに変換</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const d = new Date(e.date);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>return { title: e.title, start: d.toISOString().split('T')[0], backgroundColor: '#00A3A0', borderColor: '#00A3A0' };</p>
+<p class="p1"><span class="Apple-converted-space">            </span>});</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const cNow = new FullCalendar.Calendar(document.getElementById('calendar-now'), {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>initialView: 'dayGridMonth', locale: 'ja', height: 'auto', events: calendarEvents, headerToolbar: { left: '', center: 'title', right: '' }</p>
+<p class="p1"><span class="Apple-converted-space">            </span>});</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const nextMonth = new Date(); nextMonth.setMonth(nextMonth.getMonth() + 1);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const cNext = new FullCalendar.Calendar(document.getElementById('calendar-next'), {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>initialView: 'dayGridMonth', initialDate: nextMonth, locale: 'ja', height: 'auto', events: calendarEvents, headerToolbar: { left: '', center: 'title', right: '' }</p>
+<p class="p1"><span class="Apple-converted-space">            </span>});</p>
+<p class="p1"><span class="Apple-converted-space">            </span>cNow.render(); cNext.render();</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>async function load() {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>// イベント取得</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (allEvents.length === 0) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const { data, error } = await supabase.from('events').select('*').order('date', { ascending: true });</p>
+<p class="p1"><span class="Apple-converted-space">                </span>if (error) { console.error(error); document.getElementById('events-list').innerText = "エラー: " + error.message; return; }</p>
+<p class="p1"><span class="Apple-converted-space">                </span>allEvents = data;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>initCalendar(allEvents);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>// タグ生成</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const tags = new Set();</p>
+<p class="p1"><span class="Apple-converted-space">                </span>allEvents.forEach(e =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>const tList = Array.isArray(e.tags) ? e.tags : (e.tags || '').split(',');</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>tList.forEach(t =&gt; t.trim() &amp;&amp; tags.add(t.trim()));</p>
+<p class="p1"><span class="Apple-converted-space">                </span>});</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const tagList = document.getElementById('tag-list');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>tagList.innerHTML = `&lt;button class="tag-button active" id="tag-all"&gt;全て&lt;/button&gt;` + Array.from(tags).map(t =&gt; `&lt;button class="tag-button" data-tag="${t}"&gt;${t}&lt;/button&gt;`).join('');</p>
+<p class="p2"><span class="Apple-converted-space">                </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>tagList.onclick = (e) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>if (e.target.tagName !== 'BUTTON') return;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>currentTag = e.target.dataset.tag || '';</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>Array.from(tagList.children).forEach(btn =&gt; btn.classList.toggle('active', btn === e.target));</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>renderEvents();</p>
+<p class="p1"><span class="Apple-converted-space">                </span>};</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>renderEvents();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>loadFavorites(); // お気に入り読み込み</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>async function loadFavorites() {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const { data, error } = await supabase.from('favorites').select('event_id').eq('user_id', userId);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (!error &amp;&amp; data) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>favIds = new Set(data.map(f =&gt; f.event_id.toString())); // IDを文字列で統一</p>
+<p class="p1"><span class="Apple-converted-space">                </span>renderEvents(); // ハートマーク更新のため再描画</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>function renderEvents() {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const key = document.getElementById('search-input').value.toLowerCase();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const filtered = allEvents.filter(e =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const eTags = Array.isArray(e.tags) ? e.tags.join(',') : (e.tags || '');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>if (currentTag &amp;&amp; !eTags.includes(currentTag)) return false;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>if (key &amp;&amp; !(e.title + e.location).toLowerCase().includes(key)) return false;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>return true;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const listContainer = document.getElementById('events-list');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>listContainer.innerHTML = filtered.map(e =&gt; `</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="event-card"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="favorite-button" data-id="${e.id}"&gt;${favIds.has(e.id.toString()) ? '❤️' : '🤍'}&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>${e.image_url ? `&lt;img src="${e.image_url}" class="event-image"&gt;` : ''}</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;h3&gt;${e.title}&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;p&gt;📍 ${e.location} &lt;br&gt; 📅 ${new Date(e.date).toLocaleDateString()}&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="action-buttons"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;a href="https://www.google.com/calendar/render?action=TEMPLATE&amp;text=${encodeURIComponent(e.title)}" target="_blank" class="calendar-button"&gt;📅 登録&lt;/a&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;a href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;su=${encodeURIComponent(e.title)}&amp;body=${encodeURIComponent(window.location.href)}" target="_blank" class="mail-button"&gt;📧 Gmail&lt;/a&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;a href="https://line.me/R/msg/text/?${encodeURIComponent(e.title)}" target="_blank" class="line-button"&gt;💬 LINE&lt;/a&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">                    </span></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="review-section"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;h4&gt;レビュー ⭐&lt;/h4&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="review-form"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="star-selector" data-event-id="${e.id}"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;span class="star-input" data-val="1"&gt;★&lt;/span&gt;&lt;span class="star-input" data-val="2"&gt;★&lt;/span&gt;&lt;span class="star-input" data-val="3"&gt;★&lt;/span&gt;&lt;span class="star-input" data-val="4"&gt;★&lt;/span&gt;&lt;span class="star-input" data-val="5"&gt;★&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;input type="text" class="review-input" placeholder="感想を入力..." id="input-${e.id}"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;button onclick="window.sendReview(${e.id})" style="margin-top:5px; padding:5px; background:#00A3A0; color:white; border:none; border-radius:5px; cursor:pointer;"&gt;投稿&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div id="reviews-list-${e.id}"&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>`).join('') || '&lt;p&gt;該当なし&lt;/p&gt;';</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>// お気に入りボタンイベント</p>
+<p class="p1"><span class="Apple-converted-space">            </span>listContainer.querySelectorAll('.favorite-button').forEach(btn =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>btn.onclick = async () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>const eventId = btn.dataset.id;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>if (favIds.has(eventId)) {</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>await supabase.from('favorites').delete().match({ user_id: userId, event_id: eventId });</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>favIds.delete(eventId);</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>await supabase.from('favorites').insert({ user_id: userId, event_id: eventId });</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>favIds.add(eventId);</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>renderEvents();</p>
+<p class="p1"><span class="Apple-converted-space">                </span>};</p>
+<p class="p1"><span class="Apple-converted-space">            </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>// 星評価</p>
+<p class="p1"><span class="Apple-converted-space">            </span>listContainer.querySelectorAll('.star-selector').forEach(sel =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>let currentRating = 0;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const stars = sel.querySelectorAll('.star-input');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>stars.forEach(star =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>star.onclick = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>currentRating = star.dataset.val;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>stars.forEach(s =&gt; s.classList.toggle('active', s.dataset.val &lt;= currentRating));</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>sel.dataset.rating = currentRating;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>};</p>
+<p class="p1"><span class="Apple-converted-space">                </span>});</p>
+<p class="p1"><span class="Apple-converted-space">            </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>// レビュー読み込み</p>
+<p class="p1"><span class="Apple-converted-space">            </span>filtered.forEach(e =&gt; loadReviews(e.id));</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>async function loadReviews(eventId) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const { data, error } = await supabase.from('reviews')</p>
+<p class="p1"><span class="Apple-converted-space">                </span>.select('*').eq('event_id', eventId).order('created_at', { ascending: false });</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const container = document.getElementById(`reviews-list-${eventId}`);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (container &amp;&amp; data) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>container.innerHTML = data.map(r =&gt; `</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="review-item"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="review-header"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;span&gt;👤 ゲスト&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;span class="review-stars"&gt;${'⭐'.repeat(r.rating)}&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="review-text"&gt;${r.comment}&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>`).join('');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>window.sendReview = async (eventId) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const input = document.getElementById(`input-${eventId}`);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const selector = document.querySelector(`.star-selector[data-event-id="${eventId}"]`);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const rating = selector.dataset.rating || 0;</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (rating == 0) return alert("星評価を選んでください");</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (!input.value.trim()) return alert("コメントを入力してください");</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const { error } = await supabase.from('reviews').insert({</p>
+<p class="p1"><span class="Apple-converted-space">                </span>event_id: eventId,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>user_id: userId, // 仮のID</p>
+<p class="p1"><span class="Apple-converted-space">                </span>user_name: 'Guest',</p>
+<p class="p1"><span class="Apple-converted-space">                </span>rating: parseInt(rating),</p>
+<p class="p1"><span class="Apple-converted-space">                </span>comment: input.value</p>
+<p class="p1"><span class="Apple-converted-space">            </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (error) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>alert("エラー: " + error.message);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>input.value = "";</p>
+<p class="p1"><span class="Apple-converted-space">                </span>selector.dataset.rating = 0;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>selector.querySelectorAll('.star-input').forEach(s =&gt; s.classList.remove('active'));</p>
+<p class="p1"><span class="Apple-converted-space">                </span>loadReviews(eventId); // 即座に再読み込み</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>document.getElementById('search-button').onclick = () =&gt; renderEvents();</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// 初回読み込み</p>
+<p class="p1"><span class="Apple-converted-space">        </span>load();</p>
 <p class="p1"><span class="Apple-converted-space">    </span>&lt;/script&gt;</p>
 <p class="p1">&lt;/body&gt;</p>
 <p class="p1">&lt;/html&gt;</p>
