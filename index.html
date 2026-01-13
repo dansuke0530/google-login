@@ -3,109 +3,122 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Supabase Basic App</title>
+    <title>イベントサイト - Top</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
     <style>
-        body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; line-height: 1.6; }
-        .card { border: 1px solid #ddd; padding: 20px; border-radius: 8px; margin-bottom: 20px; background: #fafafa; }
-        button { cursor: pointer; padding: 10px 20px; background: #00A3A0; color: white; border: none; border-radius: 4px; }
-        button:hover { opacity: 0.9; }
+        body { font-family: sans-serif; margin: 0; background-color: #f4f7f6; color: #333; }
+        
+        /* ヘッダーのデザイン */
+        header { 
+            background: white; padding: 15px 30px; 
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            position: sticky; top: 0; z-index: 100;
+        }
+        .logo { font-size: 20px; font-weight: bold; color: #00A3A0; text-decoration: none; }
+        
+        /* 右上のボタンデザイン */
+        .nav-btn {
+            background-color: #333; color: white; padding: 8px 20px;
+            border-radius: 50px; text-decoration: none; font-size: 14px; font-weight: bold;
+            transition: 0.3s; display: inline-block;
+        }
+        .nav-btn:hover { background-color: #555; transform: translateY(-2px); }
+        .nav-btn.mypage { background-color: #00A3A0; } /* ログイン時は色を変える */
+
+        /* メインコンテンツ */
+        .container { max-width: 1000px; margin: 40px auto; padding: 20px; }
+        h1 { text-align: center; margin-bottom: 40px; font-size: 28px; }
+
+        /* イベントカードのグリッド表示 */
+        .event-grid { 
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+            gap: 20px; 
+        }
+        .event-card { 
+            background: white; padding: 25px; border-radius: 12px; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: 0.3s; 
+        }
+        .event-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+        .event-date { color: #888; font-size: 0.9em; margin-bottom: 10px; display: block; }
+        .event-title { font-size: 1.2em; font-weight: bold; margin: 0 0 10px 0; color: #333; }
+        .event-desc { color: #666; font-size: 0.95em; line-height: 1.5; }
+        .no-event { text-align: center; color: #999; grid-column: 1 / -1; }
     </style>
 </head>
 <body>
-    <h1>Supabase アプリの基本構造</h1>
 
-    <div class="card">
-        <h3>👤 ユーザー認証テスト</h3>
-        <p id="auth-status">確認中...</p>
-        <button id="login-btn" onclick="signIn()">Googleでログイン</button>
-        <button id="logout-btn" onclick="signOut()" style="background:#666; display:none;">ログアウト</button>
-    </div>
+    <header>
+        <a href="index.html" class="logo">EventSite Demo</a>
+        <a id="auth-link" href="login.html" class="nav-btn">ログイン</a>
+    </header>
 
-    <div class="card">
-        <h3>🗄️ データベース接続テスト</h3>
-        <p>イベントテーブルからデータを取得します：</p>
-        <div id="data-area">（ここにデータが表示されます）</div>
-        <button onclick="fetchEvents()">データを取得</button>
+    <div class="container">
+        <h1>📅 開催予定のイベント</h1>
+        <div id="event-list" class="event-grid">
+            <p class="no-event">読み込み中...</p>
+        </div>
     </div>
 
     <script>
-        // ==========================================
-        // 2. 初期設定（ここを修正しました！）
-        // ==========================================
+        // 設定
         const supabaseUrl = 'https://daexakehxcvspmthpzzf.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhZXhha2VoeGN2c3BtdGhwenpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyMjc0ODgsImV4cCI6MjA4MzgwMzQ4OH0.xpHRjDPWlch_D80v1QQ9k_CJV6Q39pDa5f9qQ470rMI';
-        
-        // ★★★ 変更点：変数名を 'supabase' から 'supabaseClient' に変更 ★★★
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
         // ==========================================
-        // 3. 認証機能（ログイン・ログアウト）
+        // 1. 右上のボタンを自動切替（ログイン判定）
         // ==========================================
-        async function signIn() {
-            // ここも 'supabaseClient' を使う
-            const { error } = await supabaseClient.auth.signInWithOAuth({
-                provider: 'google',
-                options: { redirectTo: window.location.href }
-            });
-            if (error) alert(error.message);
-        }
+        async function updateAuthButton() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            const btn = document.getElementById('auth-link');
 
-        async function signOut() {
-            // ここも 'supabaseClient' を使う
-            const { error } = await supabaseClient.auth.signOut();
-            if (!error) location.reload();
+            if (session) {
+                // ログインしてるなら「マイページへ」
+                btn.innerText = "マイページへ";
+                btn.href = "mypage.html";
+                btn.classList.add('mypage'); // 色を変えるクラス追加
+            } else {
+                // してないなら「ログイン」
+                btn.innerText = "ログイン";
+                btn.href = "login.html";
+                btn.classList.remove('mypage');
+            }
         }
+        updateAuthButton();
 
         // ==========================================
-        // 4. データベース操作（データの取得）
+        // 2. イベント一覧を表示する
         // ==========================================
         async function fetchEvents() {
-            const display = document.getElementById('data-area');
-            display.innerHTML = '読み込み中...';
-
-            // ここも 'supabaseClient' を使う
+            const listArea = document.getElementById('event-list');
+            
+            // 日付の新しい順に取得
             const { data, error } = await supabaseClient
                 .from('events')
                 .select('*')
-                .limit(5);
+                .order('date', { ascending: true }); // 開催日が近い順
 
             if (error) {
-                display.innerHTML = `<span style="color:red">エラー: ${error.message}</span>`;
-            } else if (data.length === 0) {
-                display.innerHTML = 'データがありません。';
-            } else {
-                display.innerHTML = data.map(item => `
-                    <div style="border-bottom:1px solid #ccc; padding:5px;">
-                        <strong>${item.title}</strong> (${new Date(item.date).toLocaleDateString()})
-                    </div>
-                `).join('');
+                listArea.innerHTML = `<p class="no-event" style="color:red">エラー: ${error.message}</p>`;
+                return;
             }
-        }
 
-        // ==========================================
-        // 5. 状態監視
-        // ==========================================
-        async function checkUser() {
-            // ここも 'supabaseClient' を使う
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            const status = document.getElementById('auth-status');
-            const loginBtn = document.getElementById('login-btn');
-            const logoutBtn = document.getElementById('logout-btn');
-
-            if (session) {
-                status.innerHTML = `ログイン中: <b>${session.user.email}</b>`;
-                loginBtn.style.display = 'none';
-                logoutBtn.style.display = 'inline-block';
-            } else {
-                status.innerText = '未ログイン';
-                loginBtn.style.display = 'inline-block';
-                logoutBtn.style.display = 'none';
+            if (!data || data.length === 0) {
+                listArea.innerHTML = '<p class="no-event">現在予定されているイベントはありません。</p>';
+                return;
             }
-        }
 
-        checkUser();
+            // HTMLを生成して表示
+            listArea.innerHTML = data.map(event => `
+                <div class="event-card">
+                    <span class="event-date">📅 ${new Date(event.date).toLocaleDateString()}</span>
+                    <h3 class="event-title">${event.title}</h3>
+                    <p class="event-desc">詳細情報が入ります...</p>
+                </div>
+            `).join('');
+        }
+        fetchEvents();
     </script>
 </body>
 </html>
