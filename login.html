@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Googleログインテスト</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 50px; background-color: #f4f7f6; }
+        .box { background: white; padding: 30px; border-radius: 15px; max-width: 500px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        h1 { color: #333; }
+        button { 
+            padding: 12px 24px; font-size: 16px; cursor: pointer; border: none; border-radius: 50px; font-weight: bold; margin-top: 10px; transition: 0.3s;
+        }
+        .btn-google { background-color: #4285F4; color: white; }
+        .btn-logout { background-color: #666; color: white; }
+        #user-info { margin-top: 20px; font-weight: bold; color: #00A3A0; font-size: 1.2em; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h1>🔐 Googleログイン (login.html)</h1>
+        <div id="login-area">
+            <p>下のボタンを押してGoogleアカウントでログインしてね</p>
+            <button class="btn-google" onclick="signInWithGoogle()">Googleでログイン</button>
+        </div>
+        <div id="logout-area" style="display:none;">
+            <p id="user-info"></p>
+            <button class="btn-logout" onclick="signOut()">ログアウト</button>
+        </div>
+    </div>
+
+    <script>
+        const supabaseUrl = 'https://daexakehxcvspmthpzzf.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhZXhha2VoeGN2c3BtdGhwenpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyMjc0ODgsImV4cCI6MjA4MzgwMzQ4OH0.xpHRjDPWlch_D80v1QQ9k_CJV6Q39pDa5f9qQ470rMI';
+        
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+        async function signInWithGoogle() {
+            try {
+                const { data, error } = await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: { redirectTo: window.location.href }
+                });
+                if (error) throw error;
+            } catch (error) {
+                alert("ログインエラー: " + error.message);
+            }
+        }
+
+        async function signOut() {
+            const { error } = await supabase.auth.signOut();
+            if (!error) location.reload();
+        }
+
+        async function checkUser() {
+            const { data: { session } } = await supabase.auth.getSession();
+            const loginArea = document.getElementById('login-area');
+            const logoutArea = document.getElementById('logout-area');
+            const userInfo = document.getElementById('user-info');
+
+            if (session) {
+                loginArea.style.display = 'none';
+                logoutArea.style.display = 'block';
+                userInfo.innerText = '🎉 こんにちは、' + session.user.email + ' さん！';
+            } else {
+                loginArea.style.display = 'block';
+                logoutArea.style.display = 'none';
+            }
+        }
+        checkUser();
+    </script>
+</body>
+</html>
