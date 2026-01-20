@@ -6,95 +6,55 @@
     <title>イベントサイト - Top</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* --- 基本設定 --- */
-        body { font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", sans-serif; margin: 0; background-color: #f4f7f6; color: #333; }
-        
-        /* --- ヘッダー --- */
-        header { 
-            background: white; padding: 15px 30px; 
-            display: flex; justify-content: space-between; align-items: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            position: sticky; top: 0; z-index: 100;
-        }
+        /* (前回のCSSと同じ部分は省略せず、全部載せます) */
+        body { font-family: "Helvetica Neue", Arial, sans-serif; margin: 0; background-color: #f4f7f6; color: #333; }
+        header { background: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
         .logo { font-size: 20px; font-weight: bold; color: #00A3A0; text-decoration: none; }
-        .nav-btn {
-            background-color: #333; color: white; padding: 8px 20px;
-            border-radius: 50px; text-decoration: none; font-size: 14px; font-weight: bold;
-            transition: 0.3s;
-        }
+        .nav-btn { background-color: #333; color: white; padding: 8px 20px; border-radius: 50px; text-decoration: none; font-size: 14px; font-weight: bold; transition: 0.3s; }
         .nav-btn:hover { opacity: 0.8; }
         .nav-btn.mypage { background-color: #00A3A0; }
-
-        /* --- レイアウト（2カラム構成） --- */
-        .wrapper {
-            max-width: 1200px; margin: 40px auto; padding: 0 20px;
-            display: flex; gap: 40px; /* 左と右の間隔 */
-            align-items: flex-start; /* 上揃え */
-        }
-
-        /* --- 左側：メインエリア --- */
-        main { 
-            flex: 3; /* 幅の比率 3 */
-            width: 100%; 
-        }
-
-        /* イベント一覧を2列グリッドにする */
-        .event-grid { 
-            display: grid; 
-            grid-template-columns: repeat(2, 1fr); /* 1fr 1fr で均等2列 */
-            gap: 20px; 
-        }
-
-        /* カードのデザイン */
+        
+        .wrapper { max-width: 1200px; margin: 40px auto; padding: 0 20px; display: flex; gap: 40px; align-items: flex-start; }
+        main { flex: 3; width: 100%; }
+        .event-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+        
         .event-card { 
             background: white; padding: 25px; border-radius: 12px; 
             box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: 0.3s; 
             cursor: pointer; border: 1px solid transparent;
-            display: flex; flex-direction: column; justify-content: space-between;
-            min-height: 150px; /* 高さをある程度揃える */
+            display: flex; flex-direction: column; gap: 10px;
+            min-height: 160px;
         }
-        .event-card:hover { 
-            transform: translateY(-5px); 
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1); 
-            border-color: #00A3A0; 
+        .event-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); border-color: #00A3A0; }
+        
+        /* 日付バッジのデザイン */
+        .date-badge { 
+            background: #eef2f5; color: #555; padding: 4px 10px; border-radius: 4px; 
+            font-size: 0.85em; font-weight: bold; display: inline-block; margin-bottom: 5px;
         }
-        .event-date { color: #888; font-size: 0.85em; margin-bottom: 8px; font-weight: bold; }
-        .event-title { font-size: 1.3em; font-weight: bold; margin: 0 0 10px 0; color: #333; line-height: 1.4; }
-        /* 詳細文（3行以上は...にする設定） */
-        .event-desc { 
-            color: #666; font-size: 0.9em; line-height: 1.6; margin: 0;
-            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+        .event-title { font-size: 1.3em; font-weight: bold; margin: 0; color: #333; line-height: 1.4; }
+        
+        /* 概要欄（2行制限） */
+        .event-short { 
+            color: #666; font-size: 0.95em; line-height: 1.6; 
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
         }
 
-        /* --- 右側：サイドバー --- */
-        aside { 
-            flex: 1; /* 幅の比率 1 */
-            position: sticky; top: 90px; /* スクロールしてもついてくる */
-        }
-        
-        .sidebar-box {
-            background: white; padding: 20px; border-radius: 10px;
-            margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
+        aside { flex: 1; position: sticky; top: 90px; }
+        .sidebar-box { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .sidebar-title { font-size: 16px; font-weight: bold; margin-bottom: 15px; border-left: 4px solid #00A3A0; padding-left: 10px; }
-        
         .search-box input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; background: #fafafa; }
         .tag-list span { display: inline-block; background: #eef2f5; padding: 5px 10px; border-radius: 20px; font-size: 12px; margin: 0 5px 5px 0; color: #555; cursor: pointer; transition:0.2s; }
         .tag-list span:hover { background: #dfe6eb; color: #333; }
-        .category-list { list-style: none; padding: 0; margin: 0; }
-        .category-list li { padding: 8px 0; border-bottom: 1px solid #eee; color: #666; cursor: pointer; }
-        .category-list li:hover { color: #00A3A0; }
-
-        /* スマホ対応 */
+        
         @media (max-width: 768px) {
             .wrapper { flex-direction: column; }
-            .event-grid { grid-template-columns: 1fr; /* スマホは1列 */ }
-            aside { position: static; width: 100%; box-sizing: border-box; }
+            .event-grid { grid-template-columns: 1fr; }
+            aside { position: static; width: 100%; }
         }
     </style>
 </head>
 <body>
-
     <header>
         <a href="index.html" class="logo">EventSite Demo</a>
         <a id="auth-link" href="login.html" class="nav-btn">ログイン</a>
@@ -107,32 +67,17 @@
                 <p>読み込み中...</p>
             </div>
         </main>
-
+        
         <aside>
             <div class="sidebar-box search-box">
                 <div class="sidebar-title">イベント検索</div>
                 <input type="text" placeholder="キーワードを入力...">
             </div>
-
-            <div class="sidebar-box">
-                <div class="sidebar-title">人気のタグ</div>
-                <div class="tag-list">
-                    <span>#Webデザイン</span>
-                    <span>#プログラミング</span>
-                    <span>#交流会</span>
-                    <span>#オンライン</span>
-                    <span>#初心者歓迎</span>
-                </div>
-            </div>
-
             <div class="sidebar-box">
                 <div class="sidebar-title">カテゴリー</div>
-                <ul class="category-list">
-                    <li>IT・テクノロジー</li>
-                    <li>ビジネス・起業</li>
-                    <li>趣味・ライフスタイル</li>
-                    <li>キャリア・転職</li>
-                </ul>
+                <div class="tag-list">
+                    <span>#Webデザイン</span> <span>#プログラミング</span> <span>#交流会</span>
+                </div>
             </div>
         </aside>
     </div>
@@ -142,7 +87,6 @@
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhZXhha2VoeGN2c3BtdGhwenpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyMjc0ODgsImV4cCI6MjA4MzgwMzQ4OH0.xpHRjDPWlch_D80v1QQ9k_CJV6Q39pDa5f9qQ470rMI';
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-        // 1. ログインボタン制御
         async function updateAuthButton() {
             const { data: { session } } = await supabaseClient.auth.getSession();
             const btn = document.getElementById('auth-link');
@@ -157,40 +101,57 @@
         }
         updateAuthButton();
 
-        // 2. イベント一覧表示
+        // 日付をきれいに整形する関数
+        function formatDateDisplay(start, end, startTime, endTime) {
+            const startDate = new Date(start);
+            const endDate = end ? new Date(end) : null;
+            
+            // 日付の表示 (例: 1/20)
+            let dateStr = `${startDate.getMonth()+1}/${startDate.getDate()}`;
+            
+            // 終了日が違えば「〜 1/22」をつける
+            if (endDate && start !== end) {
+                dateStr += ` 〜 ${endDate.getMonth()+1}/${endDate.getDate()}`;
+            }
+
+            // 時間の表示 (例: 10:00〜18:00)
+            let timeStr = "";
+            if (startTime) {
+                // 秒を消して「10:00」の形にする
+                const sTime = startTime.substring(0, 5); 
+                timeStr = ` ${sTime}`;
+                if (endTime) {
+                    const eTime = endTime.substring(0, 5);
+                    timeStr += `〜${eTime}`;
+                }
+            }
+
+            return `📅 ${dateStr} ${timeStr}`;
+        }
+
         async function fetchEvents() {
             const listArea = document.getElementById('event-list');
-            
+            // データ取得（新しいカラムも全部とってくる）
             const { data, error } = await supabaseClient
                 .from('events')
                 .select('*')
                 .order('date', { ascending: true });
 
-            if (error) {
-                listArea.innerHTML = `<p style="color:red">エラー: ${error.message}</p>`;
-                return;
-            }
-            if (!data || data.length === 0) {
-                listArea.innerHTML = '<p>現在予定されているイベントはありません。</p>';
-                return;
-            }
+            if (error) return listArea.innerHTML = `<p style="color:red">エラー: ${error.message}</p>`;
+            if (!data || data.length === 0) return listArea.innerHTML = '<p>イベントはありません。</p>';
 
-            // カードを生成
             listArea.innerHTML = data.map(event => `
-                <div class="event-card" onclick="goToDetail(${event.id})">
+                <div class="event-card" onclick="location.href='event.html?id=${event.id}'">
                     <div>
-                        <span class="event-date">📅 ${new Date(event.date).toLocaleDateString()}</span>
+                        <span class="date-badge">
+                            ${formatDateDisplay(event.date, event.end_date, event.start_time, event.end_time)}
+                        </span>
                         <h3 class="event-title">${event.title}</h3>
                     </div>
-                    <p class="event-desc">${event.description ? event.description : ''}</p>
+                    <p class="event-short">${event.short_desc ? event.short_desc : '詳細はこちら'}</p>
                 </div>
             `).join('');
         }
-
-        function goToDetail(id) {
-            window.location.href = `event.html?id=${id}`;
-        }
-
         fetchEvents();
     </script>
 </body>
