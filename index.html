@@ -6,46 +6,39 @@
     <title>イベントサイト - Top</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* (前回のCSSと同じ部分は省略せず、全部載せます) */
         body { font-family: "Helvetica Neue", Arial, sans-serif; margin: 0; background-color: #f4f7f6; color: #333; }
         header { background: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
         .logo { font-size: 20px; font-weight: bold; color: #00A3A0; text-decoration: none; }
         .nav-btn { background-color: #333; color: white; padding: 8px 20px; border-radius: 50px; text-decoration: none; font-size: 14px; font-weight: bold; transition: 0.3s; }
-        .nav-btn:hover { opacity: 0.8; }
         .nav-btn.mypage { background-color: #00A3A0; }
-        
+
         .wrapper { max-width: 1200px; margin: 40px auto; padding: 0 20px; display: flex; gap: 40px; align-items: flex-start; }
         main { flex: 3; width: 100%; }
         .event-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
         
+        /* カードのデザイン（画像対応版） */
         .event-card { 
-            background: white; padding: 25px; border-radius: 12px; 
+            background: white; border-radius: 12px; overflow: hidden; /* 角丸からはみ出た画像をカット */
             box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: 0.3s; 
-            cursor: pointer; border: 1px solid transparent;
-            display: flex; flex-direction: column; gap: 10px;
-            min-height: 160px;
+            cursor: pointer; border: 1px solid transparent; display: flex; flex-direction: column;
         }
         .event-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); border-color: #00A3A0; }
         
-        /* 日付バッジのデザイン */
-        .date-badge { 
-            background: #eef2f5; color: #555; padding: 4px 10px; border-radius: 4px; 
-            font-size: 0.85em; font-weight: bold; display: inline-block; margin-bottom: 5px;
-        }
-        .event-title { font-size: 1.3em; font-weight: bold; margin: 0; color: #333; line-height: 1.4; }
-        
-        /* 概要欄（2行制限） */
-        .event-short { 
-            color: #666; font-size: 0.95em; line-height: 1.6; 
-            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-        }
+        /* 画像エリア */
+        .card-image { width: 100%; height: 200px; background-color: #eee; position: relative; }
+        .card-image img { width: 100%; height: 100%; object-fit: cover; } /* 画像を枠いっぱいにトリミング */
+        .no-image { display: flex; align-items: center; justify-content: center; height: 100%; color: #aaa; font-weight: bold; background: #eef2f5; }
+
+        /* テキストエリア */
+        .card-content { padding: 20px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .date-badge { background: #eef2f5; color: #555; padding: 4px 10px; border-radius: 4px; font-size: 0.85em; font-weight: bold; display: inline-block; margin-bottom: 8px; align-self: flex-start; }
+        .event-title { font-size: 1.3em; font-weight: bold; margin: 0 0 10px 0; color: #333; line-height: 1.4; }
+        .event-short { color: #666; font-size: 0.95em; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
         aside { flex: 1; position: sticky; top: 90px; }
         .sidebar-box { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .sidebar-title { font-size: 16px; font-weight: bold; margin-bottom: 15px; border-left: 4px solid #00A3A0; padding-left: 10px; }
-        .search-box input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; background: #fafafa; }
-        .tag-list span { display: inline-block; background: #eef2f5; padding: 5px 10px; border-radius: 20px; font-size: 12px; margin: 0 5px 5px 0; color: #555; cursor: pointer; transition:0.2s; }
-        .tag-list span:hover { background: #dfe6eb; color: #333; }
+        .tag-list span { display: inline-block; background: #eef2f5; padding: 5px 10px; border-radius: 20px; font-size: 12px; margin: 0 5px 5px 0; color: #555; cursor: pointer; }
         
         @media (max-width: 768px) {
             .wrapper { flex-direction: column; }
@@ -69,14 +62,14 @@
         </main>
         
         <aside>
-            <div class="sidebar-box search-box">
+            <div class="sidebar-box">
                 <div class="sidebar-title">イベント検索</div>
-                <input type="text" placeholder="キーワードを入力...">
+                <input type="text" placeholder="キーワード..." style="width:100%; padding:10px; border:1px solid #ddd; border-radius:4px;">
             </div>
             <div class="sidebar-box">
-                <div class="sidebar-title">カテゴリー</div>
+                <div class="sidebar-title">人気のタグ</div>
                 <div class="tag-list">
-                    <span>#Webデザイン</span> <span>#プログラミング</span> <span>#交流会</span>
+                    <span>#Webデザイン</span> <span>#プログラミング</span>
                 </div>
             </div>
         </aside>
@@ -90,65 +83,43 @@
         async function updateAuthButton() {
             const { data: { session } } = await supabaseClient.auth.getSession();
             const btn = document.getElementById('auth-link');
-            if (session) {
-                btn.innerText = "マイページへ";
-                btn.href = "mypage.html";
-                btn.classList.add('mypage');
-            } else {
-                btn.innerText = "ログイン";
-                btn.href = "login.html";
-            }
+            if (session) { btn.innerText = "マイページへ"; btn.href = "mypage.html"; btn.classList.add('mypage'); }
+            else { btn.innerText = "ログイン"; btn.href = "login.html"; }
         }
         updateAuthButton();
 
-        // 日付をきれいに整形する関数
         function formatDateDisplay(start, end, startTime, endTime) {
             const startDate = new Date(start);
             const endDate = end ? new Date(end) : null;
-            
-            // 日付の表示 (例: 1/20)
             let dateStr = `${startDate.getMonth()+1}/${startDate.getDate()}`;
-            
-            // 終了日が違えば「〜 1/22」をつける
-            if (endDate && start !== end) {
-                dateStr += ` 〜 ${endDate.getMonth()+1}/${endDate.getDate()}`;
-            }
-
-            // 時間の表示 (例: 10:00〜18:00)
-            let timeStr = "";
-            if (startTime) {
-                // 秒を消して「10:00」の形にする
-                const sTime = startTime.substring(0, 5); 
-                timeStr = ` ${sTime}`;
-                if (endTime) {
-                    const eTime = endTime.substring(0, 5);
-                    timeStr += `〜${eTime}`;
-                }
-            }
-
-            return `📅 ${dateStr} ${timeStr}`;
+            if (endDate && start !== end) dateStr += ` 〜 ${endDate.getMonth()+1}/${endDate.getDate()}`;
+            if (startTime) dateStr += ` ${startTime.substring(0, 5)}`;
+            if (startTime && endTime) dateStr += `〜${endTime.substring(0, 5)}`;
+            return `📅 ${dateStr}`;
         }
 
         async function fetchEvents() {
             const listArea = document.getElementById('event-list');
-            // データ取得（新しいカラムも全部とってくる）
-            const { data, error } = await supabaseClient
-                .from('events')
-                .select('*')
-                .order('date', { ascending: true });
+            const { data, error } = await supabaseClient.from('events').select('*').order('date', { ascending: true });
 
             if (error) return listArea.innerHTML = `<p style="color:red">エラー: ${error.message}</p>`;
             if (!data || data.length === 0) return listArea.innerHTML = '<p>イベントはありません。</p>';
 
             listArea.innerHTML = data.map(event => `
                 <div class="event-card" onclick="location.href='event.html?id=${event.id}'">
-                    <div>
-                        <span class="date-badge">
-                            ${formatDateDisplay(event.date, event.end_date, event.start_time, event.end_time)}
-                        </span>
-                        <h3 class="event-title">${event.title}</h3>
+                    <div class="card-image">
+                        ${event.image_url 
+                            ? `<img src="${event.image_url}" alt="${event.title}">` 
+                            : `<div class="no-image">No Image</div>`
+                        }
                     </div>
-                    <p class="event-short">${event.short_desc ? event.short_desc : '詳細はこちら'}</p>
+                    <div class="card-content">
+                        <div>
+                            <span class="date-badge">${formatDateDisplay(event.date, event.end_date, event.start_time, event.end_time)}</span>
+                            <h3 class="event-title">${event.title}</h3>
+                        </div>
+                        <p class="event-short">${event.short_desc ? event.short_desc : ''}</p>
+                    </div>
                 </div>
             `).join('');
         }
