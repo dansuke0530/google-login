@@ -6,21 +6,86 @@
     <title>イベント詳細</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: sans-serif; background-color: #f4f7f6; padding: 40px; color: #333; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        /* --- 共通デザイン (トップページと同じ) --- */
+        body { font-family: "Helvetica Neue", Arial, sans-serif; margin: 0; background-color: #f4f7f6; color: #333; }
         
-        /* 画像表示エリア */
-        .event-main-image { width: 100%; height: auto; max-height: 400px; object-fit: cover; border-radius: 8px; margin-bottom: 20px; display: none; /* 画像があるときだけ表示 */ }
+        header { 
+            background: white; padding: 15px 30px; 
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            position: sticky; top: 0; z-index: 1000;
+        }
+        .logo { font-size: 20px; font-weight: bold; color: #00A3A0; text-decoration: none; }
+        .nav-btn { background-color: #333; color: white; padding: 8px 20px; border-radius: 50px; text-decoration: none; font-size: 14px; font-weight: bold; transition: 0.3s; }
+        .nav-btn.mypage { background-color: #00A3A0; }
 
-        .date { color: #888; font-weight: bold; display: block; margin-bottom: 10px; }
-        h1 { font-size: 32px; margin: 0 0 30px 0; border-bottom: 2px solid #00A3A0; padding-bottom: 15px; }
-        .content { line-height: 1.8; font-size: 16px; white-space: pre-wrap; }
-        .back-btn { display: inline-block; margin-top: 40px; text-decoration: none; color: #666; font-weight: bold; }
+        /* --- レイアウト (トップページと同じ) --- */
+        .wrapper { 
+            max-width: 1200px; margin: 40px auto; padding: 0 20px; 
+            display: flex; gap: 40px; align-items: flex-start; 
+        }
+
+        /* --- メインエリア (詳細ページ専用デザイン) --- */
+        main { flex: 3; width: 100%; }
+        
+        .detail-card {
+            background: white; padding: 40px; border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .event-main-image { width: 100%; height: auto; max-height: 400px; object-fit: cover; border-radius: 8px; margin-bottom: 25px; display: none; }
+
+        .date-badge { 
+            background: #eef2f5; color: #555; padding: 6px 12px; border-radius: 4px; 
+            font-size: 0.95em; font-weight: bold; display: inline-block; margin-bottom: 15px;
+        }
+
+        h1 { font-size: 28px; margin: 0 0 30px 0; border-bottom: 2px solid #00A3A0; padding-bottom: 15px; line-height: 1.4; }
+        
+        .content { line-height: 1.8; font-size: 16px; white-space: pre-wrap; color: #444; }
+        
+        .back-btn { 
+            display: inline-block; margin-top: 40px; text-decoration: none; 
+            color: #666; font-weight: bold; border: 1px solid #ddd; padding: 10px 20px; border-radius: 50px; transition: 0.3s;
+        }
+        .back-btn:hover { background: #eee; color: #333; }
+
+        /* --- サイドバー (トップページと同じ) --- */
+        aside { flex: 1; position: sticky; top: 90px; }
+        .sidebar-box { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .sidebar-title { font-size: 16px; font-weight: bold; margin-bottom: 15px; border-left: 4px solid #00A3A0; padding-left: 10px; }
+        
+        @media (max-width: 768px) {
+            .wrapper { flex-direction: column; }
+            aside { position: static; width: 100%; }
+        }
     </style>
 </head>
 <body>
-    <div class="container" id="detail-area">
-        <p>読み込み中...</p>
+    <header>
+        <a href="index.html" class="logo">EventSite Demo</a>
+        <a id="auth-link" href="login.html" class="nav-btn">ログイン</a>
+    </header>
+
+    <div class="wrapper">
+        <main id="detail-area">
+            <p style="text-align:center; margin-top:50px;">読み込み中...</p>
+        </main>
+
+        <aside>
+            <div class="sidebar-box">
+                <div class="sidebar-title">イベント検索</div>
+                <input type="text" placeholder="キーワード..." style="width:100%; padding:10px; border:1px solid #ddd; border-radius:4px; box-sizing: border-box;">
+            </div>
+            <div class="sidebar-box">
+                <div class="sidebar-title">人気のタグ</div>
+                <div style="font-size:14px; color:#666;">#Webデザイン #プログラミング</div>
+            </div>
+            <div class="sidebar-box">
+                <div class="sidebar-title">他のイベントも見る</div>
+                <a href="index.html" style="color:#00A3A0; text-decoration:none; font-weight:bold;">一覧に戻る →</a>
+            </div>
+        </aside>
     </div>
 
     <script>
@@ -28,10 +93,29 @@
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhZXhha2VoeGN2c3BtdGhwenpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyMjc0ODgsImV4cCI6MjA4MzgwMzQ4OH0.xpHRjDPWlch_D80v1QQ9k_CJV6Q39pDa5f9qQ470rMI';
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
+        // ヘッダーのボタン制御
+        async function updateAuthButton() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            const btn = document.getElementById('auth-link');
+            if (session) { btn.innerText = "マイページへ"; btn.href = "mypage.html"; btn.classList.add('mypage'); }
+            else { btn.innerText = "ログイン"; btn.href = "login.html"; }
+        }
+        updateAuthButton();
+
+        // 日時整形関数
+        function formatDateDisplay(start, end, startTime, endTime) {
+            const startDate = new Date(start);
+            const endDate = end ? new Date(end) : null;
+            let dateStr = `${startDate.getMonth()+1}/${startDate.getDate()}`;
+            if (endDate && start !== end) dateStr += `〜${endDate.getMonth()+1}/${endDate.getDate()}`;
+            if (startTime) dateStr += ` ${startTime.substring(0, 5)}`;
+            if (startTime && endTime) dateStr += `〜${endTime.substring(0, 5)}`;
+            return dateStr;
+        }
+
         async function fetchEventDetail() {
             const params = new URLSearchParams(window.location.search);
             const eventId = params.get('id');
-
             if (!eventId) return document.getElementById('detail-area').innerHTML = '<p>イベントが見つかりません</p>';
 
             const { data, error } = await supabaseClient.from('events').select('*').eq('id', eventId).single();
@@ -39,17 +123,20 @@
             if (error) {
                 document.getElementById('detail-area').innerText = 'エラー: ' + error.message;
             } else {
-                // 画像タグの準備（画像があればsrcを入れる）
                 const imageTag = data.image_url 
                     ? `<img src="${data.image_url}" class="event-main-image" style="display:block;">` 
                     : '';
 
+                const dateStr = formatDateDisplay(data.date, data.end_date, data.start_time, data.end_time);
+
                 document.getElementById('detail-area').innerHTML = `
-                    ${imageTag}
-                    <span class="date">📅 ${new Date(data.date).toLocaleDateString()}</span>
-                    <h1>${data.title}</h1>
-                    <div class="content">${data.description || '詳細はありません。'}</div>
-                    <a href="index.html" class="back-btn">← 一覧に戻る</a>
+                    <div class="detail-card">
+                        ${imageTag}
+                        <span class="date-badge">📅 ${dateStr}</span>
+                        <h1>${data.title}</h1>
+                        <div class="content">${data.description || '詳細はありません。'}</div>
+                        <a href="index.html" class="back-btn">← 一覧に戻る</a>
+                    </div>
                 `;
             }
         }
