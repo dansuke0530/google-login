@@ -53,16 +53,20 @@
         async function addEvent() {
             const title = document.getElementById('title').value;
             const date = document.getElementById('date').value;
-            // descriptionは今回まだ保存しないけど、箱だけ用意
+            // ★追加：詳細文も取得
+            const description = document.getElementById('description').value;
             
             if (!title || !date) {
                 alert("タイトルと日付は必須だよ！");
                 return;
             }
 
+            // ★変更：description も一緒に送る！
             const { error } = await supabaseClient
                 .from('events')
-                .insert([{ title: title, date: date }]);
+                .insert([
+                    { title: title, date: date, description: description }
+                ]);
 
             if (error) {
                 alert("エラー: " + error.message);
@@ -70,6 +74,7 @@
                 alert("🎉 登録しました！");
                 document.getElementById('title').value = '';
                 document.getElementById('date').value = '';
+                document.getElementById('description').value = '';
             }
         }
     </script>
