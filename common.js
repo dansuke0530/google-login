@@ -1,6 +1,6 @@
 // common.js
 
-// 1. ヘッダーのHTML（ID="auth-link" のボタンが重要！）
+// 1. ヘッダーHTML
 const headerHTML = `
     <header>
         <div class="header-inner">
@@ -12,7 +12,7 @@ const headerHTML = `
     </header>
 `;
 
-// 2. 共通CSS
+// 2. 共通CSS (D4C風デザイン)
 const commonCSS = `
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Manrope:wght@400;600&display=swap');
@@ -35,75 +35,64 @@ const commonCSS = `
         }
         .logo { font-size: 20px; font-weight: 700; letter-spacing: 0.05em; color: #000; }
         
-        /* ボタンのデザイン */
+        /* ボタン共通スタイル */
         .btn-login { 
             border: 1px solid #ddd; padding: 8px 25px; border-radius: 50px; 
             font-size: 12px; font-weight: 600; color: #333; cursor: pointer;
         }
         .btn-login:hover { border-color: #000; background: #000; color: #fff; }
         
-        /* マイページボタン用（黒背景） */
+        /* 状態別スタイル */
         .btn-login.mypage { background: #000; color: #fff; border-color: #000; }
-        .btn-login.mypage:hover { opacity: 0.8; }
-        
-        /* ログアウトボタン用（グレー背景とかにするならここ） */
-        .btn-login.logout { background: #666; color: #fff; border-color: #666; }
+        .btn-login.logout { background: #eee; color: #333; border-color: #eee; }
+        .btn-login.back   { background: transparent; border-color: #ccc; color: #666; } /* 戻るボタン */
     </style>
 `;
 
-// HTMLとCSSを書き出し
 document.write(commonCSS);
 document.write(headerHTML);
 
-
-// 3. ★ここが改良ポイント！状況に合わせてボタンを書き換える機能
+// 3. ボタン自動切り替えロジック
 async function updateHeaderButton() {
-    // Supabaseがまだ読み込まれてない時は何もしない
     if (typeof supabaseClient === 'undefined') return;
 
     const btn = document.getElementById('auth-link');
     if (!btn) return;
 
-    // 今のページのURLを取得
     const currentPath = window.location.pathname;
 
-    // ★パターンA：ここが「マイページ (mypage.html)」の場合
+    // ★パターンA：マイページにいる時 → LOGOUT
     if (currentPath.includes('mypage.html')) {
-        btn.innerText = "LOGOUT";     // 文字をログアウトに
-        btn.href = "#";               // リンクは無効化
-        btn.classList.add('logout');  // デザイン変更用クラス
-        
-        // クリックしたらログアウト処理を実行
+        btn.innerText = "LOGOUT";
+        btn.href = "#";
+        btn.classList.add('logout');
         btn.onclick = async (e) => {
-            e.preventDefault(); // リンク移動を止める
+            e.preventDefault();
             const { error } = await supabaseClient.auth.signOut();
-            if (!error) {
-                window.location.href = "index.html"; // トップへ戻る
-            } else {
-                alert("ログアウト失敗: " + error.message);
-            }
+            if (!error) window.location.href = "index.html";
         };
-        return; // ここで終了（下の処理はしない）
+        return;
     }
 
-    // ★パターンB：その他のページ（トップ、詳細、登録画面など）
-    // ログインしてるかチェック
-    const { data: { session } } = await supabaseClient.auth.getSession();
+    // ★パターンB：登録画面 (admin.html) にいる時 → BACK (マイページへ戻る)
+    if (currentPath.includes('admin.html')) {
+        btn.innerText = "BACK";     // ボタン名をBACKに
+        btn.href = "mypage.html";   // リンク先はマイページ
+        btn.classList.add('back');  // デザイン変更用
+        return;
+    }
 
+    // ★パターンC：その他のページ（トップ、詳細）
+    const { data: { session } } = await supabaseClient.auth.getSession();
     if (session) {
-        // ログイン中なら「マイページへ」
         btn.innerText = "MY PAGE";
         btn.href = "mypage.html";
         btn.classList.add('mypage');
-        btn.onclick = null; // クリックイベントは消しておく
     } else {
-        // 未ログインなら「ログイン画面へ」
         btn.innerText = "LOGIN";
         btn.href = "login.html";
         btn.classList.remove('mypage');
-        btn.onclick = null;
     }
 }
 
-// ページ読み込みが終わったら実行
 window.addEventListener('load', updateHeaderButton);
