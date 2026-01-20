@@ -12,16 +12,15 @@
         label { display: block; margin-top: 20px; font-weight: bold; color: #555; margin-bottom: 5px; }
         input[type="text"], input[type="date"], input[type="time"], textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; font-size: 16px; }
         
-        /* スイッチボタンのデザイン */
-        .toggle-group { display: flex; gap: 10px; margin-bottom: 10px; }
-        .toggle-label {
-            flex: 1; text-align: center; padding: 10px; background: #eee; border-radius: 4px; cursor: pointer; transition: 0.3s; font-weight: bold; color: #666;
-        }
-        /* ラジオボタン自体は隠す */
-        .toggle-group input { display: none; }
-        /* 選択された時のデザイン */
-        .toggle-group input:checked + .toggle-label { background: #00A3A0; color: white; }
+        /* ファイル選択ボタンのデザイン */
+        input[type="file"] { padding: 10px 0; }
 
+        /* スイッチボタンのデザイン（前回と同じ） */
+        .toggle-group { display: flex; gap: 10px; margin-bottom: 10px; }
+        .toggle-label { flex: 1; text-align: center; padding: 10px; background: #eee; border-radius: 4px; cursor: pointer; transition: 0.3s; font-weight: bold; color: #666; }
+        .toggle-group input { display: none; }
+        .toggle-group input:checked + .toggle-label { background: #00A3A0; color: white; }
+        
         button.submit-btn { width: 100%; padding: 12px; background-color: #333; color: white; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 30px; }
         button.submit-btn:hover { opacity: 0.9; }
         .back-link { display: block; text-align: center; margin-top: 20px; color: #666; text-decoration: none; }
@@ -30,54 +29,38 @@
 <body>
 
     <div class="container">
-        <h1>📝 高機能イベント登録</h1>
+        <h1>📝 イベント登録 (画像対応)</h1>
         
         <label>イベント名</label>
         <input type="text" id="title" placeholder="例：Webデザイン勉強会">
 
-        <label>一覧用キャッチコピー（20文字程度）</label>
+        <label>アイキャッチ画像</label>
+        <input type="file" id="image" accept="image/*">
+
+        <label>一覧用キャッチコピー</label>
         <input type="text" id="short_desc" maxlength="30" placeholder="例：未経験からプロを目指す第一歩！">
 
         <label>開催期間</label>
         <div class="toggle-group">
-            <label>
-                <input type="radio" name="dateType" value="single" checked onchange="toggleDateInputs()">
-                <span class="toggle-label">単日開催</span>
-            </label>
-            <label>
-                <input type="radio" name="dateType" value="multi" onchange="toggleDateInputs()">
-                <span class="toggle-label">複数日開催</span>
-            </label>
+            <label><input type="radio" name="dateType" value="single" checked onchange="toggleDateInputs()"><span class="toggle-label">単日開催</span></label>
+            <label><input type="radio" name="dateType" value="multi" onchange="toggleDateInputs()"><span class="toggle-label">複数日開催</span></label>
         </div>
-
         <div id="date-inputs">
             <input type="date" id="start_date">
-            <div id="end-date-area" style="display:none; margin-top:10px;">
-                <span>〜</span>
-                <input type="date" id="end_date">
-            </div>
+            <div id="end-date-area" style="display:none; margin-top:10px;"><span>〜</span><input type="date" id="end_date"></div>
         </div>
 
         <label>時間指定</label>
         <div class="toggle-group">
-            <label>
-                <input type="radio" name="timeType" value="none" checked onchange="toggleTimeInputs()">
-                <span class="toggle-label">時間指定なし</span>
-            </label>
-            <label>
-                <input type="radio" name="timeType" value="specify" onchange="toggleTimeInputs()">
-                <span class="toggle-label">時間を指定する</span>
-            </label>
+            <label><input type="radio" name="timeType" value="none" checked onchange="toggleTimeInputs()"><span class="toggle-label">時間指定なし</span></label>
+            <label><input type="radio" name="timeType" value="specify" onchange="toggleTimeInputs()"><span class="toggle-label">時間を指定する</span></label>
         </div>
-
         <div id="time-area" style="display:none; gap:10px; align-items:center;">
-            <input type="time" id="start_time">
-            <span>〜</span>
-            <input type="time" id="end_time">
+            <input type="time" id="start_time"><span>〜</span><input type="time" id="end_time">
         </div>
 
-        <label>詳細内容（詳細ページ用）</label>
-        <textarea id="description" rows="6" placeholder="イベントの詳細内容をたっぷり書いてね..."></textarea>
+        <label>詳細内容</label>
+        <textarea id="description" rows="6" placeholder="詳細内容..."></textarea>
 
         <button class="submit-btn" onclick="addEvent()">登録してトップへ戻る</button>
         <a href="mypage.html" class="back-link">← マイページに戻る</a>
@@ -88,72 +71,68 @@
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhZXhha2VoeGN2c3BtdGhwenpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyMjc0ODgsImV4cCI6MjA4MzgwMzQ4OH0.xpHRjDPWlch_D80v1QQ9k_CJV6Q39pDa5f9qQ470rMI';
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-        // --- 画面の表示切り替えロジック ---
         function toggleDateInputs() {
             const isMulti = document.querySelector('input[name="dateType"]:checked').value === 'multi';
             document.getElementById('end-date-area').style.display = isMulti ? 'block' : 'none';
         }
-
         function toggleTimeInputs() {
             const isSpecify = document.querySelector('input[name="timeType"]:checked').value === 'specify';
             document.getElementById('time-area').style.display = isSpecify ? 'flex' : 'none';
         }
 
-        // --- 登録処理 ---
         async function addEvent() {
-            // 値を取得
             const title = document.getElementById('title').value;
             const short_desc = document.getElementById('short_desc').value;
             const description = document.getElementById('description').value;
-            
-            // 日付処理
             const startDate = document.getElementById('start_date').value;
             let endDate = document.getElementById('end_date').value;
-            const dateType = document.querySelector('input[name="dateType"]:checked').value;
-            
-            // 単日開催なら、終了日は開始日と同じにする（またはnullでもいいが、検索しやすくするため同じにする）
-            if (dateType === 'single') {
-                endDate = startDate;
-            }
+            if (document.querySelector('input[name="dateType"]:checked').value === 'single') endDate = startDate;
 
-            // 時間処理
             let startTime = null;
             let endTime = null;
-            const timeType = document.querySelector('input[name="timeType"]:checked').value;
-            
-            if (timeType === 'specify') {
+            if (document.querySelector('input[name="timeType"]:checked').value === 'specify') {
                 startTime = document.getElementById('start_time').value;
                 endTime = document.getElementById('end_time').value;
             }
 
-            // バリデーション
-            if (!title || !startDate) {
-                alert("タイトルと開催日は必須だよ！");
-                return;
-            }
+            // ★画像アップロード処理★
+            const imageFile = document.getElementById('image').files[0];
+            let imageUrl = null; // 画像がない場合はnull
 
-            // Supabaseへ送信
-            const { error } = await supabaseClient
-                .from('events')
-                .insert([{ 
-                    title: title, 
-                    short_desc: short_desc,
-                    date: startDate,      // 既存のdateカラムを開始日として使う
-                    end_date: endDate,    // 新しい終了日カラム
-                    start_time: startTime, // 新しい開始時間
-                    end_time: endTime,     // 新しい終了時間
-                    description: description 
+            if (!title || !startDate) return alert("タイトルと開催日は必須だよ！");
+
+            try {
+                // 画像がある場合だけアップロードを実行
+                if (imageFile) {
+                    const fileName = Date.now() + '_' + imageFile.name; // ファイル名が被らないように時間を足す
+                    const { error: uploadError } = await supabaseClient.storage
+                        .from('images') // 'images'バケットに入れる
+                        .upload(fileName, imageFile);
+                    
+                    if (uploadError) throw uploadError;
+
+                    // アップロードした画像の公開URLを取得
+                    const { data } = supabaseClient.storage.from('images').getPublicUrl(fileName);
+                    imageUrl = data.publicUrl;
+                }
+
+                // データベースに登録（image_url も一緒に！）
+                const { error } = await supabaseClient.from('events').insert([{ 
+                    title, short_desc, date: startDate, end_date: endDate, 
+                    start_time: startTime, end_time: endTime, description,
+                    image_url: imageUrl // ここでURLを保存
                 }]);
 
-            if (error) {
-                alert("エラー: " + error.message);
-            } else {
-                alert("🎉 登録完了！");
+                if (error) throw error;
+
+                alert("🎉 登録完了！画像も保存したよ！");
                 window.location.href = 'index.html';
+
+            } catch (error) {
+                alert("エラー: " + error.message);
             }
         }
         
-        // ログインチェック
         async function checkAuth() {
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (!session) window.location.href = 'login.html';
