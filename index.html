@@ -6,10 +6,10 @@
     <title>イベントサイト - Top</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* 基本設定 */
-        body { font-family: sans-serif; margin: 0; background-color: #f4f7f6; color: #333; }
+        /* --- 基本設定 --- */
+        body { font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", sans-serif; margin: 0; background-color: #f4f7f6; color: #333; }
         
-        /* ヘッダー */
+        /* --- ヘッダー --- */
         header { 
             background: white; padding: 15px 30px; 
             display: flex; justify-content: space-between; align-items: center;
@@ -25,40 +25,52 @@
         .nav-btn:hover { opacity: 0.8; }
         .nav-btn.mypage { background-color: #00A3A0; }
 
-        /* 全体のレイアウト（2カラム） */
+        /* --- レイアウト（2カラム構成） --- */
         .wrapper {
             max-width: 1200px; margin: 40px auto; padding: 0 20px;
-            display: flex; gap: 40px; /* メインとサイドの間隔 */
+            display: flex; gap: 40px; /* 左と右の間隔 */
+            align-items: flex-start; /* 上揃え */
         }
 
-        /* 左側：メインエリア（イベント一覧） */
-        main { flex: 3; /* 画面の3/4くらいの幅を使う */ }
+        /* --- 左側：メインエリア --- */
+        main { 
+            flex: 3; /* 幅の比率 3 */
+            width: 100%; 
+        }
 
-        /* イベント一覧を2列にする設定 */
+        /* イベント一覧を2列グリッドにする */
         .event-grid { 
             display: grid; 
-            grid-template-columns: repeat(2, 1fr); /* きっちり2列！ */
+            grid-template-columns: repeat(2, 1fr); /* 1fr 1fr で均等2列 */
             gap: 20px; 
         }
 
-        /* イベントカードのデザイン */
+        /* カードのデザイン */
         .event-card { 
             background: white; padding: 25px; border-radius: 12px; 
             box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: 0.3s; 
-            cursor: pointer; /* ★マウスを乗せると指マークになる！ */
-            border: 1px solid transparent;
+            cursor: pointer; border: 1px solid transparent;
+            display: flex; flex-direction: column; justify-content: space-between;
+            min-height: 150px; /* 高さをある程度揃える */
         }
         .event-card:hover { 
             transform: translateY(-5px); 
             box-shadow: 0 8px 20px rgba(0,0,0,0.1); 
-            border-color: #00A3A0; /* ホバーで枠線 */
+            border-color: #00A3A0; 
         }
-        .event-date { color: #888; font-size: 0.9em; margin-bottom: 10px; display: block; }
-        .event-title { font-size: 1.2em; font-weight: bold; margin: 0 0 10px 0; color: #333; }
-        .event-desc { color: #666; font-size: 0.9em; line-height: 1.5; }
+        .event-date { color: #888; font-size: 0.85em; margin-bottom: 8px; font-weight: bold; }
+        .event-title { font-size: 1.3em; font-weight: bold; margin: 0 0 10px 0; color: #333; line-height: 1.4; }
+        /* 詳細文（3行以上は...にする設定） */
+        .event-desc { 
+            color: #666; font-size: 0.9em; line-height: 1.6; margin: 0;
+            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+        }
 
-        /* 右側：サイドバー */
-        aside { flex: 1; /* 画面の1/4くらいの幅を使う */ }
+        /* --- 右側：サイドバー --- */
+        aside { 
+            flex: 1; /* 幅の比率 1 */
+            position: sticky; top: 90px; /* スクロールしてもついてくる */
+        }
         
         .sidebar-box {
             background: white; padding: 20px; border-radius: 10px;
@@ -66,15 +78,18 @@
         }
         .sidebar-title { font-size: 16px; font-weight: bold; margin-bottom: 15px; border-left: 4px solid #00A3A0; padding-left: 10px; }
         
-        /* 検索窓のデザイン */
-        .search-box input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
-        .tag-list span { display: inline-block; background: #eef2f5; padding: 5px 10px; border-radius: 20px; font-size: 12px; margin: 0 5px 5px 0; color: #555; cursor: pointer; }
-        .tag-list span:hover { background: #dfe6eb; }
+        .search-box input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; background: #fafafa; }
+        .tag-list span { display: inline-block; background: #eef2f5; padding: 5px 10px; border-radius: 20px; font-size: 12px; margin: 0 5px 5px 0; color: #555; cursor: pointer; transition:0.2s; }
+        .tag-list span:hover { background: #dfe6eb; color: #333; }
+        .category-list { list-style: none; padding: 0; margin: 0; }
+        .category-list li { padding: 8px 0; border-bottom: 1px solid #eee; color: #666; cursor: pointer; }
+        .category-list li:hover { color: #00A3A0; }
 
-        /* スマホの時は縦並びにする */
+        /* スマホ対応 */
         @media (max-width: 768px) {
             .wrapper { flex-direction: column; }
-            .event-grid { grid-template-columns: 1fr; /* スマホなら1列 */ }
+            .event-grid { grid-template-columns: 1fr; /* スマホは1列 */ }
+            aside { position: static; width: 100%; box-sizing: border-box; }
         }
     </style>
 </head>
@@ -87,7 +102,7 @@
 
     <div class="wrapper">
         <main>
-            <h1 style="font-size: 24px; margin-bottom: 20px;">📅 新着イベント</h1>
+            <h1 style="font-size: 24px; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px;">📅 新着イベント</h1>
             <div id="event-list" class="event-grid">
                 <p>読み込み中...</p>
             </div>
@@ -100,7 +115,7 @@
             </div>
 
             <div class="sidebar-box">
-                <div class="sidebar-title">タグで探す</div>
+                <div class="sidebar-title">人気のタグ</div>
                 <div class="tag-list">
                     <span>#Webデザイン</span>
                     <span>#プログラミング</span>
@@ -111,11 +126,12 @@
             </div>
 
             <div class="sidebar-box">
-                <div class="sidebar-title">ジャンル</div>
-                <ul style="padding-left: 20px; color: #666; line-height: 2;">
+                <div class="sidebar-title">カテゴリー</div>
+                <ul class="category-list">
                     <li>IT・テクノロジー</li>
                     <li>ビジネス・起業</li>
                     <li>趣味・ライフスタイル</li>
+                    <li>キャリア・転職</li>
                 </ul>
             </div>
         </aside>
@@ -141,7 +157,7 @@
         }
         updateAuthButton();
 
-        // 2. イベント一覧表示（クリック機能付き！）
+        // 2. イベント一覧表示
         async function fetchEvents() {
             const listArea = document.getElementById('event-list');
             
@@ -162,14 +178,15 @@
             // カードを生成
             listArea.innerHTML = data.map(event => `
                 <div class="event-card" onclick="goToDetail(${event.id})">
-                    <span class="event-date">📅 ${new Date(event.date).toLocaleDateString()}</span>
-                    <h3 class="event-title">${event.title}</h3>
-                    <p class="event-desc">${event.description ? event.description.substring(0, 40) + '...' : '詳細を見る'}</p>
+                    <div>
+                        <span class="event-date">📅 ${new Date(event.date).toLocaleDateString()}</span>
+                        <h3 class="event-title">${event.title}</h3>
+                    </div>
+                    <p class="event-desc">${event.description ? event.description : ''}</p>
                 </div>
             `).join('');
         }
 
-        // 詳細ページへ飛ばす関数
         function goToDetail(id) {
             window.location.href = `event.html?id=${id}`;
         }
