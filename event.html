@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>イベント詳細</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: sans-serif; background-color: #f4f7f6; padding: 40px; color: #333; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .date { color: #888; font-weight: bold; }
+        h1 { font-size: 32px; margin: 10px 0 30px 0; border-bottom: 2px solid #00A3A0; padding-bottom: 15px; }
+        .content { line-height: 1.8; font-size: 16px; white-space: pre-wrap; /* 改行をそのまま表示 */ }
+        .back-btn { display: inline-block; margin-top: 40px; text-decoration: none; color: #666; font-weight: bold; }
+        .loading { text-align: center; color: #999; margin-top: 50px; }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="detail-area">
+        <p class="loading">読み込み中...</p>
+    </div>
+
+    <script>
+        const supabaseUrl = 'https://daexakehxcvspmthpzzf.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhZXhha2VoeGN2c3BtdGhwenpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyMjc0ODgsImV4cCI6MjA4MzgwMzQ4OH0.xpHRjDPWlch_D80v1QQ9k_CJV6Q39pDa5f9qQ470rMI';
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+        async function fetchEventDetail() {
+            // 1. URLから「id」を取り出す魔法
+            const params = new URLSearchParams(window.location.search);
+            const eventId = params.get('id');
+
+            if (!eventId) {
+                document.getElementById('detail-area').innerHTML = '<p>イベントが見つかりません</p>';
+                return;
+            }
+
+            // 2. そのIDのデータだけをSupabaseから持ってくる
+            const { data, error } = await supabaseClient
+                .from('events')
+                .select('*')
+                .eq('id', eventId) // IDが一致するもの
+                .single();         // 1個だけちょうだい
+
+            if (error) {
+                document.getElementById('detail-area').innerText = 'エラー: ' + error.message;
+            } else {
+                // 3. 画面に表示！
+                document.getElementById('detail-area').innerHTML = `
+                    <span class="date">📅 ${new Date(data.date).toLocaleDateString()}</span>
+                    <h1>${data.title}</h1>
+                    <div class="content">${data.description || '詳細はありません。'}</div>
+                    <a href="index.html" class="back-btn">← 一覧に戻る</a>
+                `;
+            }
+        }
+
+        fetchEventDetail();
+    </script>
+</body>
+</html>
