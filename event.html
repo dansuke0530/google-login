@@ -7,10 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         /* レイアウト（index.htmlと同じ） */
-        .wrapper { 
-            max-width: 1200px; margin: 0 auto; padding: 60px 30px; 
-            display: flex; gap: 60px; align-items: flex-start; 
-        }
+        .wrapper { max-width: 1200px; margin: 0 auto; padding: 60px 30px; display: flex; gap: 60px; align-items: flex-start; }
         main { flex: 3; width: 100%; }
         aside { flex: 1; position: sticky; top: 100px; }
 
@@ -21,16 +18,17 @@
         .detail-header { margin-bottom: 40px; border-bottom: 1px solid #eee; padding-bottom: 30px; }
         .detail-date { font-size: 14px; color: #999; margin-bottom: 10px; display: block; }
         .detail-title { font-size: 28px; font-weight: 700; margin: 0; line-height: 1.4; }
-        
+        .detail-category { display: inline-block; background: #000; color: #fff; padding: 4px 10px; font-size: 11px; margin-bottom: 15px; }
+
         .detail-content { font-size: 15px; line-height: 2; color: #333; white-space: pre-wrap; margin-bottom: 60px; }
         
         .btn-back { display: inline-block; border: 1px solid #ddd; padding: 10px 30px; border-radius: 50px; color: #666; font-size: 12px; font-weight: 600; }
         .btn-back:hover { border-color: #000; color: #000; }
 
-        /* サイドバーのスタイル（index.htmlと同じ） */
+        /* サイドバー */
         .sidebar-box { margin-bottom: 50px; }
         .sidebar-title { font-size: 12px; font-weight: 600; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 20px; letter-spacing: 0.1em; }
-        .tag-list span { display: inline-block; border: 1px solid #eee; padding: 6px 15px; font-size: 11px; margin: 0 5px 5px 0; cursor: pointer; border-radius: 50px; color: #666; }
+        .tag-list span { display: inline-block; border: 1px solid #eee; padding: 6px 15px; font-size: 11px; margin: 0 5px 5px 0; border-radius: 50px; color: #666; pointer-events: none; } /* 詳細ページではタグはクリック不可にしておく */
         
         @media (max-width: 768px) { .wrapper { flex-direction: column; } aside { position: static; width: 100%; } }
     </style>
@@ -47,7 +45,12 @@
             <div class="sidebar-box">
                 <div class="sidebar-title">TAGS</div>
                 <div class="tag-list">
-                    <span>#Design</span> <span>#Event</span> <span>#Workshop</span>
+                    <span>集う</span>
+                    <span>学ぶ</span>
+                    <span>観る</span>
+                    <span>動く</span>
+                    <span>貢献する</span>
+                    <span>その他</span>
                 </div>
             </div>
             <div class="sidebar-box">
@@ -78,6 +81,7 @@
             document.getElementById('detail-area').innerHTML = `
                 ${data.image_url ? `<div class="detail-image-wrapper"><img src="${data.image_url}" class="detail-image"></div>` : ''}
                 <div class="detail-header">
+                    ${data.category ? `<span class="detail-category">${data.category}</span>` : ''}
                     <span class="detail-date">${formatDate(data.date)}</span>
                     <h1 class="detail-title">${data.title}</h1>
                 </div>
