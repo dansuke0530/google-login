@@ -1,24 +1,27 @@
 // chat.js
+// 完成版：Supabase Edge Functions経由でAIと話す
 
-// ▼▼▼ ここに新しいキー（sk-...）を貼り付けてください ▼▼▼
-const OPENAI_API_KEY = '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'; 
-// ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+// ★ここがあなたのAIの「窓口」です！
+const FUNCTION_URL = 'https://daexakehxcvspmthpzzf.supabase.co/functions/v1/ai-chat'; 
 
-// チャットの見た目（HTML/CSS）
+// チャットの見た目（HTML）
 const chatHTML = `
     <div id="chat-widget" style="display:none;">
         <div class="chat-header">
             <span>🤖 AI Concierge</span>
             <button onclick="toggleChat()" class="close-btn">×</button>
         </div>
+        
         <div id="chat-messages" class="chat-messages">
             <div class="message ai">
                 こんにちは！<br>
+                誰でも無料で利用できます✨<br>
                 「今週末のイベントある？」<br>
-                「デザイン系のイベント教えて」<br>
+                「学ぶ系のイベント教えて」<br>
                 など、お気軽にどうぞ！
             </div>
         </div>
+
         <div class="chat-input-area">
             <input type="text" id="chat-input" placeholder="質問を入力..." onkeypress="handleEnter(event)">
             <button onclick="sendMessage()">送信</button>
@@ -62,7 +65,7 @@ const chatHTML = `
         }
 
         .message {
-            max-width: 80%; padding: 10px; border-radius: 8px; font-size: 13px; line-height: 1.5;
+            max-width: 80%; padding: 10px; border-radius: 8px; font-size: 13px; line-height: 1.5; word-wrap: break-word;
         }
         .message.ai { align-self: flex-start; background: #fff; border: 1px solid #ddd; color: #333; }
         .message.user { align-self: flex-end; background: #000; color: #fff; }
@@ -80,10 +83,8 @@ const chatHTML = `
     </style>
 `;
 
-// 画面にHTMLを追加
 document.body.insertAdjacentHTML('beforeend', chatHTML);
 
-// 開閉機能
 function toggleChat() {
     const widget = document.getElementById('chat-widget');
     if (widget.style.display === 'none') {
@@ -94,12 +95,10 @@ function toggleChat() {
     }
 }
 
-// Enterキーで送信
 function handleEnter(e) {
     if (e.key === 'Enter') sendMessage();
 }
 
-// メッセージ送信のメイン処理
 async function sendMessage() {
     const input = document.getElementById('chat-input');
     const text = input.value.trim();
@@ -113,84 +112,52 @@ async function sendMessage() {
     const loadingId = addMessage('考え中...', 'ai');
 
     try {
-        // Supabaseクライアントのチェック
         if (typeof supabaseClient === 'undefined') {
-            throw new Error("Supabaseが正しく読み込まれていません。");
+            throw new Error("Supabaseが読み込まれていません。");
         }
 
-        // 3. Supabaseからイベント情報を取得
+        // 3. Supabaseから現在のイベント一覧を取得
         const { data: events, error: dbError } = await supabaseClient
             .from('events')
             .select('title, date, category, short_desc');
         
-        if (dbError) throw new Error("データベースエラー: " + dbError.message);
+        if (dbError) throw new Error("データ取得エラー");
 
-        // 4. AIへの命令文（プロンプト）作成
-        const systemPrompt = `
-            あなたはイベント検索サイトのAIコンシェルジュです。
-            以下の【イベントリスト】だけを情報源として、ユーザーの質問に答えてください。
-            
-            【イベントリスト】
-            ${JSON.stringify(events)}
-            
-            ルール:
-            - リストにないイベントは「見つかりませんでした」と答える。
-            - 日付や「category（タグ）」を考慮して提案する。
-            - 150文字以内で簡潔に答える。
-            - 絵文字を使って親しみやすくする。
-        `;
-
-        // 5. ChatGPT APIへ送信
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        // 4. あなたのSupabaseサーバー(Edge Function)に送信！
+        // ※APIキーは送りません。メッセージとデータだけ送ります。
+        const response = await fetch(FUNCTION_URL, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${OPENAI_API_KEY}`
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: "gpt-3.5-turbo", // ★一番安定して動きやすいモデル
-                messages: [
-                    { role: "system", content: systemPrompt },
-                    { role: "user", content: text }
-                ]
+                message: text,
+                events: events 
             })
         });
 
         const data = await response.json();
 
-        // エラーチェック
         if (!response.ok) {
-            const errorMsg = data.error ? data.error.message : response.statusText;
-            throw new Error(`OpenAIエラー [${response.status}]: ${errorMsg}`);
+            throw new Error(data.error || "サーバーエラーが発生しました");
         }
 
-        // 6. AIの返事を画面に表示
-        const aiResponse = data.choices[0].message.content;
-        document.getElementById(loadingId).innerText = aiResponse;
+        // 5. AIの返事を表示
+        document.getElementById(loadingId).innerText = data.reply;
 
     } catch (error) {
         console.error(error);
-        // エラーが起きたら画面に赤文字で表示
         const errorDiv = document.getElementById(loadingId);
         errorDiv.innerText = "⚠️ エラーが発生しました";
         errorDiv.innerHTML += `<br><span style="color:red; font-size:11px;">${error.message}</span>`;
-        
-        // よくあるエラーのヒント
-        if (error.message.includes('429') || error.message.includes('quota')) {
-            errorDiv.innerHTML += `<br><br>💡ヒント: クレジット残高不足です。OpenAIで5ドルほどチャージしてください。`;
-        }
-        if (error.message.includes('401')) {
-            errorDiv.innerHTML += `<br><br>💡ヒント: APIキーが間違っています。`;
-        }
     }
 }
 
-// 画面に吹き出しを追加する関数
 function addMessage(text, sender) {
     const div = document.createElement('div');
     div.classList.add('message', sender);
     div.innerText = text;
-    div.id = 'msg-' + Date.now(); // IDを付与
+    div.id = 'msg-' + Date.now();
 
     const container = document.getElementById('chat-messages');
     container.appendChild(div);
