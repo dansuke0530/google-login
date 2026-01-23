@@ -3,91 +3,197 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Super Admin</title>
+    <title>Super Admin Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Helvetica Neue', Arial, sans-serif; padding: 40px; background: #f4f4f4; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-        h1 { margin: 0; font-size: 24px; }
+        body { margin: 0; padding: 0; font-family: 'Manrope', 'Helvetica Neue', Arial, sans-serif; background: #f9f9f9; color: #333; }
         
-        .card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        /* ヘッダーエリア */
+        header { background: #fff; padding: 20px 40px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        .brand { font-weight: 800; font-size: 18px; letter-spacing: 1px; display: flex; align-items: center; gap: 10px; }
+        .brand span { background: #000; color: #fff; padding: 2px 8px; font-size: 10px; border-radius: 4px; }
         
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th { text-align: left; padding: 15px; border-bottom: 2px solid #eee; color: #666; font-size: 12px; }
-        td { padding: 15px; border-bottom: 1px solid #eee; font-size: 14px; }
-        
-        .status { font-size: 11px; background: #eee; padding: 4px 8px; border-radius: 4px; }
-        .btn-edit { background: #000; color: #fff; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 12px; }
-        .btn-new { background: #000; color: #fff; padding: 10px 20px; border-radius: 4px; text-decoration: none; font-size: 14px; font-weight: bold; }
+        .nav-group { display: flex; gap: 15px; }
+        .nav-btn { text-decoration: none; color: #666; font-size: 12px; font-weight: bold; padding: 8px 16px; border-radius: 4px; transition: 0.2s; border: 1px solid transparent; }
+        .nav-btn:hover { color: #000; background: #eee; }
+        .nav-btn.primary { background: #000; color: #fff; }
+        .nav-btn.primary:hover { opacity: 0.8; background: #000; }
+        .nav-btn.logout { color: red; border-color: #ffeaea; }
+        .nav-btn.logout:hover { background: #fff0f0; }
 
-        .btn-delete { border: none; background: none; color: red; font-weight: bold; cursor: pointer; font-size: 12px; margin-left: 10px; }
+        /* メインコンテンツ */
+        .container { max-width: 1000px; margin: 40px auto; padding: 0 20px; }
+
+        /* 検索バー */
+        .search-bar { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); margin-bottom: 30px; display: flex; gap: 10px; flex-wrap: wrap; }
+        .search-input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-family: inherit; font-size: 14px; min-width: 200px; }
+        .search-date { padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-family: inherit; font-size: 14px; }
+
+        /* リスト表示 */
+        .admin-list { list-style: none; padding: 0; }
+        .list-header { display: flex; padding: 10px 20px; font-size: 11px; color: #999; font-weight: bold; text-transform: uppercase; border-bottom: 2px solid #eee; }
+        
+        .event-item { 
+            background: #fff; border-bottom: 1px solid #eee; padding: 15px 20px; 
+            display: flex; align-items: center; gap: 20px; transition: 0.2s; 
+        }
+        .event-item:hover { background: #fafafa; }
+        .event-item:last-child { border-bottom: none; }
+
+        .item-thumb { width: 60px; height: 60px; border-radius: 4px; background: #eee; object-fit: cover; flex-shrink: 0; }
+        .item-info { flex: 1; }
+        .item-date { font-size: 12px; font-weight: bold; color: #00A3A0; margin-bottom: 4px; display: block; }
+        .item-title { font-size: 15px; font-weight: bold; color: #000; display: block; margin-bottom: 4px; }
+        .item-meta { font-size: 11px; color: #999; }
+        
+        .item-actions { display: flex; gap: 10px; }
+        .btn-edit { background: #fff; border: 1px solid #ddd; color: #333; padding: 8px 15px; border-radius: 4px; text-decoration: none; font-size: 12px; font-weight: bold; transition: 0.2s; }
+        .btn-edit:hover { border-color: #000; color: #000; }
+        .btn-del { background: transparent; border: none; color: #ccc; cursor: pointer; padding: 8px; font-size: 18px; }
+        .btn-del:hover { color: red; }
+
+        /* 件数表示 */
+        .status-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 12px; color: #666; }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>👑 SUPER ADMIN DASHBOARD</h1>
-        <div>
-            <a href="admin.html" class="btn-new">＋ Create New</a>
-            <a href="index.html" style="margin-left: 20px; color:#666; text-decoration:none; font-size:14px;">Site Top</a>
-        </div>
-    </div>
 
-    <div class="card">
-        <table>
-            <thead>
-                <tr>
-                    <th>DATE</th>
-                    <th>TITLE</th>
-                    <th>CATEGORY</th>
-                    <th>ACTION</th>
-                </tr>
-            </thead>
-            <tbody id="admin-list">
-                <tr><td colspan="4">Loading...</td></tr>
-            </tbody>
-        </table>
+    <header>
+        <div class="brand">ADMIN DASHBOARD <span>SUPER</span></div>
+        <nav class="nav-group">
+            <a href="index.html" class="nav-btn">サイトTOP</a>
+            <a href="admin.html" class="nav-btn primary">＋ 新規イベント登録</a>
+            <a href="#" onclick="logout()" class="nav-btn logout">ログアウト</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        
+        <div class="search-bar">
+            <input type="text" id="search-text" class="search-input" placeholder="イベント名やIDで検索..." oninput="filterEvents()">
+            <input type="date" id="search-date" class="search-date" onchange="filterEvents()">
+        </div>
+
+        <div class="status-bar">
+            <span id="total-count">Total: Loading...</span>
+            <span style="color:#aaa;">管理者権限で全データの編集が可能です</span>
+        </div>
+
+        <div style="background: #fff; border-radius: 8px; box-shadow: 0 2px 15px rgba(0,0,0,0.05); overflow: hidden;">
+            <div class="list-header">
+                <div style="width: 80px;">Image</div>
+                <div style="flex: 1;">Event Info</div>
+                <div style="width: 100px; text-align:right;">Action</div>
+            </div>
+            <ul id="admin-list" class="admin-list">
+                </ul>
+        </div>
+
     </div>
 
     <script>
         const supabaseUrl = 'https://daexakehxcvspmthpzzf.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhZXhha2VoeGN2c3BtdGhwenpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyMjc0ODgsImV4cCI6MjA4MzgwMzQ4OH0.xpHRjDPWlch_D80v1QQ9k_CJV6Q39pDa5f9qQ470rMI';
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+        
         const ADMIN_EMAIL = "kanaimori2024@gmail.com";
+        let allEvents = []; // 検索用に全データをここに保持する
 
         async function init() {
+            // 1. 権限チェック
             const { data: { user } } = await supabaseClient.auth.getUser();
-            
-            // 管理者チェック
             if (!user || user.email !== ADMIN_EMAIL) {
-                alert("Access Denied");
+                alert("管理者権限がありません");
                 window.location.href = 'index.html';
                 return;
             }
 
-            // 全イベント取得
+            // 2. データ全件取得
             const { data: events, error } = await supabaseClient
                 .from('events')
                 .select('*')
                 .order('date', { ascending: false });
 
+            if(error) {
+                alert("データ取得エラー");
+                return;
+            }
+
+            allEvents = events; // データを保存
+            renderList(allEvents); // 初回表示
+        }
+
+        // リスト描画関数
+        function renderList(events) {
             const list = document.getElementById('admin-list');
-            list.innerHTML = events.map(ev => `
-                <tr>
-                    <td>${ev.date}</td>
-                    <td>${ev.title}</td>
-                    <td><span class="status">${ev.category || '-'}</span></td>
-                    <td>
+            const countLabel = document.getElementById('total-count');
+            
+            countLabel.innerText = `Total: ${events.length} items`;
+
+            if(events.length === 0) {
+                list.innerHTML = '<div style="padding:20px; text-align:center; color:#999;">条件に一致するイベントはありません</div>';
+                return;
+            }
+
+            list.innerHTML = events.map(ev => {
+                // 画像がない場合のダミー
+                const img = ev.image_url ? ev.image_url : 'https://placehold.co/100x100/eee/999?text=No+Img';
+                
+                return `
+                <li class="event-item">
+                    <img src="${img}" class="item-thumb">
+                    <div class="item-info">
+                        <span class="item-date">${ev.date}</span>
+                        <span class="item-title">${ev.title}</span>
+                        <div class="item-meta">
+                            Category: ${ev.category || '-'} / ID: ${ev.id}
+                        </div>
+                    </div>
+                    <div class="item-actions">
                         <a href="edit.html?id=${ev.id}" class="btn-edit">Edit</a>
-                        <button onclick="deleteEvent('${ev.id}')" class="btn-delete">Del</button>
-                    </td>
-                </tr>
-            `).join('');
+                        <button onclick="deleteEvent('${ev.id}')" class="btn-del" title="削除">×</button>
+                    </div>
+                </li>
+            `}).join('');
+        }
+
+        // 検索フィルター関数
+        function filterEvents() {
+            const text = document.getElementById('search-text').value.toLowerCase();
+            const date = document.getElementById('search-date').value;
+
+            const filtered = allEvents.filter(ev => {
+                // タイトル検索 (英語も日本語も小文字にして比較)
+                const matchTitle = (ev.title || "").toLowerCase().includes(text) || (ev.id || "").includes(text);
+                // 日付検索 (日付が空なら無視、指定されていれば一致するか)
+                const matchDate = date ? ev.date === date : true;
+
+                return matchTitle && matchDate;
+            });
+
+            renderList(filtered);
         }
 
         async function deleteEvent(id) {
-            if(!confirm("本当に削除しますか？")) return;
-            await supabaseClient.from('events').delete().eq('id', id);
-            location.reload();
+            if(!confirm("【警告】\n本当にこのイベントを削除しますか？\nこの操作は取り消せません。")) return;
+            
+            const { error } = await supabaseClient.from('events').delete().eq('id', id);
+            
+            if(error) {
+                alert("削除に失敗しました: " + error.message);
+            } else {
+                // 画面を再読み込みせずに、データだけ消して再描画（サクサク動く）
+                allEvents = allEvents.filter(e => e.id !== id);
+                filterEvents(); 
+            }
+        }
+
+        async function logout() {
+            if(confirm("ログアウトしますか？")) {
+                await supabaseClient.auth.signOut();
+                window.location.href = 'index.html';
+            }
         }
 
         init();
