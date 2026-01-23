@@ -1,6 +1,7 @@
 // chat.js
 
-// ★ここにChatGPTのAPIキーを入れてね！
+// ★いただいたAPIキーをセットしました
+// ※注意：このファイルは絶対に他人に渡したり公開したりしないでください！
 const OPENAI_API_KEY = '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'; 
 
 // チャットのHTML（右下に固定表示）
@@ -8,7 +9,7 @@ const chatHTML = `
     <div id="chat-widget" style="display:none;">
         <div class="chat-header">
             <span>🤖 AI Concierge</span>
-            <button onclick="toggleChat()" style="background:none; border:none; color:white; cursor:pointer;">✕</button>
+            <button onclick="toggleChat()" style="background:none; border:none; color:white; cursor:pointer; font-size:18px;">×</button>
         </div>
         <div id="chat-messages" class="chat-messages">
             <div class="message ai">
@@ -33,7 +34,7 @@ const chatHTML = `
             width: 60px; height: 60px; border-radius: 50%;
             background: #000; color: #fff; border: none;
             font-size: 24px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            z-index: 9999; transition: 0.3s;
+            z-index: 9999; transition: 0.3s; display: flex; align-items: center; justify-content: center;
         }
         #chat-btn:hover { transform: scale(1.1); }
 
@@ -64,7 +65,7 @@ const chatHTML = `
 
         /* 吹き出し */
         .message {
-            max-width: 80%; padding: 10px 15px; border-radius: 12px; font-size: 13px; line-height: 1.6;
+            max-width: 80%; padding: 10px 15px; border-radius: 12px; font-size: 13px; line-height: 1.6; word-wrap: break-word;
         }
         .message.ai {
             align-self: flex-start; background: #fff; border: 1px solid #eee; color: #333;
@@ -77,13 +78,13 @@ const chatHTML = `
 
         /* 入力エリア */
         .chat-input-area {
-            padding: 10px; background: #fff; border-top: 1px solid #eee; display: flex;
+            padding: 10px; background: #fff; border-top: 1px solid #eee; display: flex; align-items: center;
         }
         #chat-input {
-            flex: 1; border: none; padding: 10px; font-size: 14px; outline: none;
+            flex: 1; border: none; padding: 10px; font-size: 14px; outline: none; background: transparent;
         }
         .chat-input-area button {
-            background: transparent; border: none; color: #000; font-weight: bold; cursor: pointer; padding: 0 10px;
+            background: transparent; border: none; color: #000; font-weight: bold; cursor: pointer; padding: 0 15px; font-size: 18px;
         }
     </style>
 `;
@@ -94,7 +95,13 @@ document.body.insertAdjacentHTML('beforeend', chatHTML);
 // 開閉切り替え
 function toggleChat() {
     const widget = document.getElementById('chat-widget');
-    widget.style.display = widget.style.display === 'none' ? 'flex' : 'none';
+    if (widget.style.display === 'none') {
+        widget.style.display = 'flex';
+        // チャットを開いたら入力欄にフォーカス
+        setTimeout(() => document.getElementById('chat-input').focus(), 100);
+    } else {
+        widget.style.display = 'none';
+    }
 }
 
 // Enterキー対応
@@ -116,13 +123,19 @@ async function sendMessage() {
     const loadingId = addMessage('考え中...', 'ai');
 
     try {
-        // ★ここがミソ！Supabaseから全イベントデータを取ってくる
-        const { data: events } = await supabaseClient
-            .from('events')
-            .select('title, date, category, short_desc');
+        // Supabaseクライアントがあるか確認
+        if (typeof supabaseClient === 'undefined') {
+            throw new Error("Supabaseが読み込まれていません。");
+        }
 
-        // AIへの命令文（システムプロンプト）を作る
-        // 「あなたはコンシェルジュです。以下のイベントデータをもとに回答して」という指示
+        // Supabaseから全イベントデータを取得（タグなども含める）
+        const { data: events, error: dbError } = await supabaseClient
+            .from('events')
+            .select('title, date, category, short_desc'); // categoryカラムにタグが入っています
+        
+        if (dbError) throw new Error("DBエラー: " + dbError.message);
+
+        // AIへの命令文
         const systemPrompt = `
             あなたはイベント検索サイトのAIコンシェルジュです。
             以下のイベントリストをもとに、ユーザーの質問に親切に答えてください。
@@ -131,9 +144,10 @@ async function sendMessage() {
             ${JSON.stringify(events)}
             
             ルール:
-            - リストにないイベントは「見つかりませんでした」と答えること。
-            - 日付やジャンルを考慮して提案すること。
-            - フレンドリーな口調で、絵文字を少し使うこと。
+            - リストにないイベントは「申し訳ありません、該当するイベントは見つかりませんでした」と答えること。
+            - 日付やタグ（category）を考慮して提案すること。
+            - ユーザーが特定のタグ（例：学ぶ、観る）に興味を示したら、それを優先すること。
+            - フレンドリーな口調で、絵文字を適度に使用すること。
             - 回答は150文字以内で簡潔に。
         `;
 
@@ -145,7 +159,7 @@ async function sendMessage() {
                 'Authorization': `Bearer ${OPENAI_API_KEY}`
             },
             body: JSON.stringify({
-                model: "gpt-3.5-turbo", // gpt-4o も使えるよ
+                model: "gpt-4o-mini", // コスパの良い最新モデルにしておきました
                 messages: [
                     { role: "system", content: systemPrompt },
                     { role: "user", content: text }
@@ -154,14 +168,21 @@ async function sendMessage() {
         });
 
         const data = await response.json();
+
+        // API側のエラーチェック
+        if (!response.ok) {
+            throw new Error("OpenAIエラー: " + (data.error?.message || "不明なエラー"));
+        }
+
         const aiResponse = data.choices[0].message.content;
 
         // 4. AIの回答を表示（ローディングを消して上書き）
         document.getElementById(loadingId).innerText = aiResponse;
 
     } catch (error) {
-        document.getElementById(loadingId).innerText = "ごめんなさい、エラーが発生しました💦";
         console.error(error);
+        // エラー内容を画面に表示
+        document.getElementById(loadingId).innerText = "⚠️ エラーが発生しました:\n" + error.message;
     }
 }
 
@@ -171,12 +192,11 @@ function addMessage(text, sender) {
     div.classList.add('message', sender);
     div.innerText = text;
     
-    // IDをつけて返す（あとで書き換えるため）
     const id = 'msg-' + Date.now();
     div.id = id;
 
     const container = document.getElementById('chat-messages');
     container.appendChild(div);
-    container.scrollTop = container.scrollHeight; // 一番下にスクロール
+    container.scrollTop = container.scrollHeight;
     return id;
 }
