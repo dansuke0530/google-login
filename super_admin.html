@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Admin</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; padding: 40px; background: #f4f4f4; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        h1 { margin: 0; font-size: 24px; }
+        
+        .card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { text-align: left; padding: 15px; border-bottom: 2px solid #eee; color: #666; font-size: 12px; }
+        td { padding: 15px; border-bottom: 1px solid #eee; font-size: 14px; }
+        
+        .status { font-size: 11px; background: #eee; padding: 4px 8px; border-radius: 4px; }
+        .btn-edit { background: #000; color: #fff; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 12px; }
+        .btn-new { background: #000; color: #fff; padding: 10px 20px; border-radius: 4px; text-decoration: none; font-size: 14px; font-weight: bold; }
+
+        .btn-delete { border: none; background: none; color: red; font-weight: bold; cursor: pointer; font-size: 12px; margin-left: 10px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>👑 SUPER ADMIN DASHBOARD</h1>
+        <div>
+            <a href="admin.html" class="btn-new">＋ Create New</a>
+            <a href="index.html" style="margin-left: 20px; color:#666; text-decoration:none; font-size:14px;">Site Top</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <table>
+            <thead>
+                <tr>
+                    <th>DATE</th>
+                    <th>TITLE</th>
+                    <th>CATEGORY</th>
+                    <th>ACTION</th>
+                </tr>
+            </thead>
+            <tbody id="admin-list">
+                <tr><td colspan="4">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const supabaseUrl = 'https://daexakehxcvspmthpzzf.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhZXhha2VoeGN2c3BtdGhwenpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyMjc0ODgsImV4cCI6MjA4MzgwMzQ4OH0.xpHRjDPWlch_D80v1QQ9k_CJV6Q39pDa5f9qQ470rMI';
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+        const ADMIN_EMAIL = "kanaimori2024@gmail.com";
+
+        async function init() {
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            
+            // 管理者チェック
+            if (!user || user.email !== ADMIN_EMAIL) {
+                alert("Access Denied");
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // 全イベント取得
+            const { data: events, error } = await supabaseClient
+                .from('events')
+                .select('*')
+                .order('date', { ascending: false });
+
+            const list = document.getElementById('admin-list');
+            list.innerHTML = events.map(ev => `
+                <tr>
+                    <td>${ev.date}</td>
+                    <td>${ev.title}</td>
+                    <td><span class="status">${ev.category || '-'}</span></td>
+                    <td>
+                        <a href="edit.html?id=${ev.id}" class="btn-edit">Edit</a>
+                        <button onclick="deleteEvent('${ev.id}')" class="btn-delete">Del</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function deleteEvent(id) {
+            if(!confirm("本当に削除しますか？")) return;
+            await supabaseClient.from('events').delete().eq('id', id);
+            location.reload();
+        }
+
+        init();
+    </script>
+</body>
+</html>
