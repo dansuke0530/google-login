@@ -5,91 +5,90 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Super Admin Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&display=swap" rel="stylesheet">
     <style>
-        body { margin: 0; padding: 0; font-family: 'Manrope', 'Helvetica Neue', Arial, sans-serif; background: #f9f9f9; color: #333; }
+        body { margin: 0; padding: 0; font-family: 'Manrope', 'Helvetica Neue', Arial, sans-serif; background: #f4f6f8; color: #333; }
         
-        /* ヘッダーエリア */
-        header { background: #fff; padding: 20px 40px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
-        .brand { font-weight: 800; font-size: 18px; letter-spacing: 1px; display: flex; align-items: center; gap: 10px; }
-        .brand span { background: #000; color: #fff; padding: 2px 8px; font-size: 10px; border-radius: 4px; }
+        /* ヘッダー */
+        header { background: #fff; padding: 15px 40px; border-bottom: 1px solid #eaeaea; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
+        .brand { font-weight: 800; font-size: 18px; letter-spacing: 0.5px; display: flex; align-items: center; gap: 10px; }
+        .brand span { background: #000; color: #fff; padding: 3px 8px; font-size: 10px; border-radius: 6px; } /* 角丸6px */
         
-        .nav-group { display: flex; gap: 15px; }
-        .nav-btn { text-decoration: none; color: #666; font-size: 12px; font-weight: bold; padding: 8px 16px; border-radius: 4px; transition: 0.2s; border: 1px solid transparent; }
-        .nav-btn:hover { color: #000; background: #eee; }
+        .nav-group { display: flex; gap: 10px; }
+        .nav-btn { text-decoration: none; color: #666; font-size: 12px; font-weight: 700; padding: 10px 18px; border-radius: 6px; transition: 0.2s; border: 1px solid transparent; } /* 角丸6px */
+        .nav-btn:hover { color: #000; background: #f0f0f0; }
         .nav-btn.primary { background: #000; color: #fff; }
-        .nav-btn.primary:hover { opacity: 0.8; background: #000; }
-        .nav-btn.logout { color: red; border-color: #ffeaea; }
-        .nav-btn.logout:hover { background: #fff0f0; }
+        .nav-btn.primary:hover { opacity: 0.8; }
+        .nav-btn.logout { color: #d93025; }
+        .nav-btn.logout:hover { background: #fff5f5; }
 
-        /* メインコンテンツ */
         .container { max-width: 1000px; margin: 40px auto; padding: 0 20px; }
 
-        /* 検索バー */
-        .search-bar { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); margin-bottom: 30px; display: flex; gap: 10px; flex-wrap: wrap; }
-        .search-input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-family: inherit; font-size: 14px; min-width: 200px; }
-        .search-date { padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-family: inherit; font-size: 14px; }
+        /* 検索バー（角丸統一） */
+        .search-bar { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); margin-bottom: 30px; display: flex; gap: 12px; border: 1px solid #eee; }
+        .search-input, .search-date { padding: 12px 16px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; font-size: 14px; outline: none; transition: 0.2s; } /* 角丸6px */
+        .search-input { flex: 1; }
+        .search-input:focus, .search-date:focus { border-color: #000; }
 
-        /* リスト表示 */
-        .admin-list { list-style: none; padding: 0; }
-        .list-header { display: flex; padding: 10px 20px; font-size: 11px; color: #999; font-weight: bold; text-transform: uppercase; border-bottom: 2px solid #eee; }
+        /* リスト枠（角丸統一） */
+        .list-container { background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 1px solid #eee; overflow: hidden; } /* 角丸12px */
         
+        .list-header { display: flex; padding: 15px 25px; font-size: 11px; color: #999; font-weight: 700; text-transform: uppercase; border-bottom: 1px solid #eee; background: #fafafa; }
+        
+        .admin-list { list-style: none; padding: 0; margin: 0; }
         .event-item { 
-            background: #fff; border-bottom: 1px solid #eee; padding: 15px 20px; 
-            display: flex; align-items: center; gap: 20px; transition: 0.2s; 
+            padding: 20px 25px; border-bottom: 1px solid #eee; 
+            display: flex; align-items: center; gap: 20px; transition: 0.2s; background: #fff;
         }
-        .event-item:hover { background: #fafafa; }
+        .event-item:hover { background: #fcfcfc; }
         .event-item:last-child { border-bottom: none; }
 
-        .item-thumb { width: 60px; height: 60px; border-radius: 4px; background: #eee; object-fit: cover; flex-shrink: 0; }
-        .item-info { flex: 1; }
-        .item-date { font-size: 12px; font-weight: bold; color: #00A3A0; margin-bottom: 4px; display: block; }
-        .item-title { font-size: 15px; font-weight: bold; color: #000; display: block; margin-bottom: 4px; }
-        .item-meta { font-size: 11px; color: #999; }
+        .item-thumb { width: 64px; height: 64px; border-radius: 6px; background: #f0f0f0; object-fit: cover; flex-shrink: 0; border: 1px solid #eee; } /* 角丸6px */
         
-        .item-actions { display: flex; gap: 10px; }
-        .btn-edit { background: #fff; border: 1px solid #ddd; color: #333; padding: 8px 15px; border-radius: 4px; text-decoration: none; font-size: 12px; font-weight: bold; transition: 0.2s; }
-        .btn-edit:hover { border-color: #000; color: #000; }
-        .btn-del { background: transparent; border: none; color: #ccc; cursor: pointer; padding: 8px; font-size: 18px; }
-        .btn-del:hover { color: red; }
+        .item-info { flex: 1; }
+        .item-date { font-size: 12px; font-weight: 700; color: #00A3A0; margin-bottom: 5px; display: block; }
+        .item-title { font-size: 15px; font-weight: 700; color: #1a1a1a; display: block; margin-bottom: 6px; }
+        .item-meta { font-size: 11px; color: #888; display: flex; gap: 10px; align-items: center; }
+        .category-badge { background: #eee; padding: 2px 8px; border-radius: 4px; font-size: 10px; color: #555; }
 
-        /* 件数表示 */
-        .status-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 12px; color: #666; }
+        .item-actions { display: flex; gap: 10px; }
+        .btn-edit { background: #fff; border: 1px solid #ddd; color: #333; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: 700; transition: 0.2s; } /* 角丸6px */
+        .btn-edit:hover { border-color: #000; color: #000; background: #000; color: #fff; }
+        .btn-del { background: #fff; border: 1px solid #ddd; color: #ccc; cursor: pointer; padding: 8px 12px; border-radius: 6px; font-size: 14px; transition: 0.2s; } /* 角丸6px */
+        .btn-del:hover { border-color: #d93025; color: #d93025; background: #fff5f5; }
+
+        .status-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 12px; color: #666; padding: 0 5px; }
     </style>
 </head>
 <body>
-
     <header>
         <div class="brand">ADMIN DASHBOARD <span>SUPER</span></div>
         <nav class="nav-group">
-            <a href="index.html" class="nav-btn">サイトTOP</a>
-            <a href="admin.html" class="nav-btn primary">＋ 新規イベント登録</a>
-            <a href="#" onclick="logout()" class="nav-btn logout">ログアウト</a>
+            <a href="index.html" class="nav-btn">View Site</a>
+            <a href="admin.html" class="nav-btn primary">＋ New Event</a>
+            <a href="#" onclick="logout()" class="nav-btn logout">Log out</a>
         </nav>
     </header>
 
     <div class="container">
-        
         <div class="search-bar">
-            <input type="text" id="search-text" class="search-input" placeholder="イベント名やIDで検索..." oninput="filterEvents()">
+            <input type="text" id="search-text" class="search-input" placeholder="Search by Keyword..." oninput="filterEvents()">
             <input type="date" id="search-date" class="search-date" onchange="filterEvents()">
         </div>
 
         <div class="status-bar">
-            <span id="total-count">Total: Loading...</span>
-            <span style="color:#aaa;">管理者権限で全データの編集が可能です</span>
+            <span id="total-count" style="font-weight:bold;">Loading...</span>
+            <span>All Data Access</span>
         </div>
 
-        <div style="background: #fff; border-radius: 8px; box-shadow: 0 2px 15px rgba(0,0,0,0.05); overflow: hidden;">
+        <div class="list-container">
             <div class="list-header">
-                <div style="width: 80px;">Image</div>
-                <div style="flex: 1;">Event Info</div>
-                <div style="width: 100px; text-align:right;">Action</div>
+                <div style="width: 84px;">Image</div>
+                <div style="flex: 1;">Details</div>
+                <div style="width: 140px; text-align:right;">Actions</div>
             </div>
-            <ul id="admin-list" class="admin-list">
-                </ul>
+            <ul id="admin-list" class="admin-list"></ul>
         </div>
-
     </div>
 
     <script>
@@ -98,48 +97,32 @@
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
         
         const ADMIN_EMAIL = "kanaimori2024@gmail.com";
-        let allEvents = []; // 検索用に全データをここに保持する
+        let allEvents = [];
 
         async function init() {
-            // 1. 権限チェック
             const { data: { user } } = await supabaseClient.auth.getUser();
             if (!user || user.email !== ADMIN_EMAIL) {
                 alert("管理者権限がありません");
                 window.location.href = 'index.html';
                 return;
             }
-
-            // 2. データ全件取得
-            const { data: events, error } = await supabaseClient
-                .from('events')
-                .select('*')
-                .order('date', { ascending: false });
-
-            if(error) {
-                alert("データ取得エラー");
-                return;
-            }
-
-            allEvents = events; // データを保存
-            renderList(allEvents); // 初回表示
+            const { data: events, error } = await supabaseClient.from('events').select('*').order('date', { ascending: false });
+            if(error) return alert("データ取得エラー");
+            allEvents = events;
+            renderList(allEvents);
         }
 
-        // リスト描画関数
         function renderList(events) {
             const list = document.getElementById('admin-list');
-            const countLabel = document.getElementById('total-count');
-            
-            countLabel.innerText = `Total: ${events.length} items`;
+            document.getElementById('total-count').innerText = `${events.length} Events`;
 
             if(events.length === 0) {
-                list.innerHTML = '<div style="padding:20px; text-align:center; color:#999;">条件に一致するイベントはありません</div>';
+                list.innerHTML = '<div style="padding:40px; text-align:center; color:#999;">No events found.</div>';
                 return;
             }
 
             list.innerHTML = events.map(ev => {
-                // 画像がない場合のダミー
-                const img = ev.image_url ? ev.image_url : 'https://placehold.co/100x100/eee/999?text=No+Img';
-                
+                const img = ev.image_url ? ev.image_url : 'https://placehold.co/100x100/f0f0f0/cccccc?text=No+Img';
                 return `
                 <li class="event-item">
                     <img src="${img}" class="item-thumb">
@@ -147,55 +130,44 @@
                         <span class="item-date">${ev.date}</span>
                         <span class="item-title">${ev.title}</span>
                         <div class="item-meta">
-                            Category: ${ev.category || '-'} / ID: ${ev.id}
+                            <span class="category-badge">${ev.category || 'No Category'}</span>
+                            <span style="margin-left:10px;">ID: ...${ev.id.slice(-4)}</span>
                         </div>
                     </div>
                     <div class="item-actions">
                         <a href="edit.html?id=${ev.id}" class="btn-edit">Edit</a>
-                        <button onclick="deleteEvent('${ev.id}')" class="btn-del" title="削除">×</button>
+                        <button onclick="deleteEvent('${ev.id}')" class="btn-del" title="削除">✕</button>
                     </div>
                 </li>
             `}).join('');
         }
 
-        // 検索フィルター関数
         function filterEvents() {
             const text = document.getElementById('search-text').value.toLowerCase();
             const date = document.getElementById('search-date').value;
-
             const filtered = allEvents.filter(ev => {
-                // タイトル検索 (英語も日本語も小文字にして比較)
-                const matchTitle = (ev.title || "").toLowerCase().includes(text) || (ev.id || "").includes(text);
-                // 日付検索 (日付が空なら無視、指定されていれば一致するか)
+                const matchTitle = (ev.title || "").toLowerCase().includes(text);
                 const matchDate = date ? ev.date === date : true;
-
                 return matchTitle && matchDate;
             });
-
             renderList(filtered);
         }
 
         async function deleteEvent(id) {
-            if(!confirm("【警告】\n本当にこのイベントを削除しますか？\nこの操作は取り消せません。")) return;
-            
+            if(!confirm("本当に削除しますか？")) return;
             const { error } = await supabaseClient.from('events').delete().eq('id', id);
-            
-            if(error) {
-                alert("削除に失敗しました: " + error.message);
-            } else {
-                // 画面を再読み込みせずに、データだけ消して再描画（サクサク動く）
+            if(!error) {
                 allEvents = allEvents.filter(e => e.id !== id);
                 filterEvents(); 
             }
         }
 
         async function logout() {
-            if(confirm("ログアウトしますか？")) {
+            if(confirm("Log out?")) {
                 await supabaseClient.auth.signOut();
                 window.location.href = 'index.html';
             }
         }
-
         init();
     </script>
 </body>
