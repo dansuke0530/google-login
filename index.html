@@ -6,21 +6,18 @@
     <title>EventSite</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* レイアウト */
         .wrapper { max-width: 1200px; margin: 0 auto; padding: 60px 30px; display: flex; gap: 60px; align-items: flex-start; }
         main { flex: 3; width: 100%; }
         
         .page-header-area { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
         .page-title { font-size: 12px; color: #aaa; font-weight: 500; letter-spacing: 0.2em; text-transform: uppercase; margin: 0; }
-        .current-filter { font-size: 12px; font-weight: bold; background: #000; color: #fff; padding: 4px 10px; border-radius: 50px; display: none; } /* フィルタ中の表示 */
+        .current-filter { font-size: 12px; font-weight: bold; background: #000; color: #fff; padding: 4px 10px; border-radius: 50px; display: none; }
 
-        /* グリッド */
         .event-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 60px 40px; }
         
-        /* カード */
         .event-card { cursor: pointer; display: flex; flex-direction: column; gap: 15px; }
         .image-wrapper { width: 100%; aspect-ratio: 16/10; background: #f5f5f5; overflow: hidden; border-radius: 2px; position: relative; }
-        .category-label { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.9); padding: 4px 10px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+        .category-label { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.9); padding: 4px 10px; font-size: 10px; font-weight: 600; letter-spacing: 0.05em; }
         .card-image { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease; }
         .event-card:hover .card-image { transform: scale(1.05); }
         .no-image { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; color: #ccc; font-size: 11px; letter-spacing: 0.1em; }
@@ -30,7 +27,6 @@
         .event-title { font-size: 16px; font-weight: 600; line-height: 1.5; margin: 0; }
         .event-desc { font-size: 13px; color: #666; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
-        /* サイドバー */
         aside { flex: 1; position: sticky; top: 100px; }
         .sidebar-box { margin-bottom: 50px; }
         .sidebar-title { font-size: 12px; font-weight: 600; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 20px; letter-spacing: 0.1em; }
@@ -38,11 +34,8 @@
         input[type="text"] { width: 100%; padding: 12px; border: 1px solid #f0f0f0; background: #f9f9f9; border-radius: 4px; font-size: 13px; box-sizing: border-box; }
         input[type="text"]:focus { outline: none; border-color: #ccc; background: #fff; }
         
-        /* タグボタン */
         .tag-list span { display: inline-block; border: 1px solid #eee; padding: 6px 15px; font-size: 11px; margin: 0 5px 5px 0; cursor: pointer; border-radius: 50px; color: #666; transition: 0.2s; }
         .tag-list span:hover { border-color: #000; color: #000; }
-        
-        /* 選択中のタグのデザイン */
         .tag-list span.active { background: #000; color: #fff; border-color: #000; }
 
         @media (max-width: 768px) {
@@ -73,13 +66,14 @@
                 <input type="text" id="search-input" placeholder="Type and hit Enter...">
             </div>
             <div class="sidebar-box">
-                <div class="sidebar-title">CATEGORY</div>
+                <div class="sidebar-title">TAGS</div>
                 <div class="tag-list" id="tag-container">
-                    <span onclick="filterByCategory('Design', this)">Design</span>
-                    <span onclick="filterByCategory('Technology', this)">Technology</span>
-                    <span onclick="filterByCategory('Business', this)">Business</span>
-                    <span onclick="filterByCategory('Art', this)">Art</span>
-                    <span onclick="filterByCategory('Other', this)">Other</span>
+                    <span onclick="filterByCategory('集う', this)">集う</span>
+                    <span onclick="filterByCategory('学ぶ', this)">学ぶ</span>
+                    <span onclick="filterByCategory('観る', this)">観る</span>
+                    <span onclick="filterByCategory('動く', this)">動く</span>
+                    <span onclick="filterByCategory('貢献する', this)">貢献する</span>
+                    <span onclick="filterByCategory('その他', this)">その他</span>
                 </div>
             </div>
         </aside>
@@ -90,7 +84,6 @@
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhZXhha2VoeGN2c3BtdGhwenpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyMjc0ODgsImV4cCI6MjA4MzgwMzQ4OH0.xpHRjDPWlch_D80v1QQ9k_CJV6Q39pDa5f9qQ470rMI';
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-        // 現在の絞り込み状態を保存する変数
         let currentKeyword = "";
         let currentCategory = "";
 
@@ -99,26 +92,14 @@
             return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
         }
 
-        // メイン：イベント取得関数（検索・絞り込み対応）
         async function fetchEvents() {
             const listArea = document.getElementById('event-list');
             listArea.innerHTML = '<p style="color:#ccc;">Searching...</p>';
             
-            // クエリ作成の開始
-            let query = supabaseClient
-                .from('events')
-                .select('*')
-                .order('date', { ascending: false });
+            let query = supabaseClient.from('events').select('*').order('date', { ascending: false });
 
-            // ★キーワードがあれば検索条件追加（タイトルに含まれるか）
-            if (currentKeyword) {
-                query = query.ilike('title', `%${currentKeyword}%`);
-            }
-
-            // ★カテゴリがあれば絞り込み条件追加
-            if (currentCategory) {
-                query = query.eq('category', currentCategory);
-            }
+            if (currentKeyword) query = query.ilike('title', `%${currentKeyword}%`);
+            if (currentCategory) query = query.eq('category', currentCategory);
 
             const { data, error } = await query;
 
@@ -139,11 +120,9 @@
                 </div>
             `).join('');
 
-            // バッジ表示更新
             updateBadge();
         }
 
-        // キーワード検索処理
         document.getElementById('search-input').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
                 currentKeyword = this.value;
@@ -151,18 +130,13 @@
             }
         });
 
-        // カテゴリ絞り込み処理
         function filterByCategory(category, element) {
-            // すでに同じカテゴリを選択していたら解除
             if (currentCategory === category) {
                 currentCategory = "";
                 element.classList.remove('active');
             } else {
-                // 違うカテゴリなら切り替え
                 currentCategory = category;
-                // 他のactiveを消す
                 document.querySelectorAll('.tag-list span').forEach(el => el.classList.remove('active'));
-                // これをactiveに
                 element.classList.add('active');
             }
             fetchEvents();
@@ -182,7 +156,6 @@
             }
         }
 
-        // 初回読み込み
         fetchEvents();
     </script>
 </body>
