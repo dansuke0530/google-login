@@ -6,78 +6,69 @@
     <title>Edit Event</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* admin.htmlと同じデザイン */
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; }
         .wrapper { max-width: 680px; margin: 0 auto; padding: 60px 30px; }
-        .page-header { text-align: center; margin-bottom: 60px; }
-        .page-title { font-size: 24px; font-weight: 700; margin-bottom: 10px; font-family: 'Manrope', sans-serif; }
+        .page-title { font-size: 24px; font-weight: 700; margin-bottom: 40px; text-align: center; }
         
-        .form-group { margin-bottom: 40px; }
-        label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 10px; text-transform: uppercase; font-family: 'Manrope', sans-serif; }
+        .form-group { margin-bottom: 30px; }
+        label { display: block; font-size: 11px; font-weight: 700; margin-bottom: 8px; text-transform: uppercase; color: #999; }
         
-        input[type="text"], input[type="date"], input[type="time"], textarea, select { 
-            width: 100%; padding: 15px 0; border: none; border-bottom: 1px solid #eee; 
-            font-size: 15px; background: transparent; border-radius: 0; 
+        input, textarea, select { 
+            width: 100%; padding: 15px; border: 1px solid #ddd; border-radius: 4px;
+            font-size: 15px; box-sizing: border-box;
         }
-        input:focus, textarea:focus, select:focus { outline: none; border-bottom-color: #000; }
-
-        .btn-submit { width: 100%; padding: 20px; background: #000; color: #fff; border: none; border-radius: 4px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 40px; }
         
-        /* 削除ボタン（赤色） */
-        .btn-delete { width: 100%; padding: 15px; background: transparent; color: red; border: 1px solid red; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer; margin-top: 20px; }
-        .btn-delete:hover { background: red; color: #fff; }
+        .btn-submit { width: 100%; padding: 18px; background: #000; color: #fff; border: none; border-radius: 4px; font-size: 14px; font-weight: bold; cursor: pointer; margin-top: 20px; }
+        .btn-delete { background: transparent; color: red; border: none; font-size: 12px; margin-top: 20px; cursor: pointer; width: 100%; text-decoration: underline; }
     </style>
 </head>
 <body>
-    <script src="common.js"></script>
-
     <div class="wrapper">
-        <div class="page-header">
-            <h1 class="page-title">EDIT EVENT</h1>
-            <p style="font-size:13px; color:#999;">イベント情報を修正します</p>
+        <h1 class="page-title">EDIT EVENT</h1>
+
+        <div class="form-group">
+            <label>Event Title</label>
+            <input type="text" id="title">
         </div>
 
-        <div class="form-container">
-            <div class="form-group">
-                <label>Event Title</label>
-                <input type="text" id="title">
-            </div>
+        <div class="form-group">
+            <label>Category</label>
+            <select id="category">
+                <option value="集う">集う</option>
+                <option value="学ぶ">学ぶ</option>
+                <option value="観る">観る</option>
+                <option value="動く">動く</option>
+                <option value="貢献する">貢献する</option>
+                <option value="その他">その他</option>
+            </select>
+        </div>
 
-            <div class="form-group">
-                <label>Tag</label>
-                <select id="category">
-                    <option value="集う">集う</option>
-                    <option value="学ぶ">学ぶ</option>
-                    <option value="観る">観る</option>
-                    <option value="動く">動く</option>
-                    <option value="貢献する">貢献する</option>
-                    <option value="その他">その他</option>
-                </select>
-            </div>
+        <div class="form-group">
+            <label>Current Image</label>
+            <div id="current-image-preview" style="margin-bottom:10px;"></div>
+            <input type="file" id="image" accept="image/*">
+        </div>
 
-            <div class="form-group">
-                <label>Current Image</label>
-                <div id="current-image" style="margin-bottom:10px; font-size:12px; color:#666;"></div>
-                <label style="color:#999; font-size:10px;">CHANGE IMAGE (Optional)</label>
-                <input type="file" id="image" accept="image/*">
-            </div>
+        <div class="form-group">
+            <label>Short Description (List view)</label>
+            <input type="text" id="short_desc">
+        </div>
 
-            <div class="form-group">
-                <label>Short Description</label>
-                <input type="text" id="short_desc">
-            </div>
+        <div class="form-group">
+            <label>Date</label>
+            <input type="date" id="start_date">
+        </div>
 
-            <div class="form-group">
-                <label>Date</label>
-                <input type="date" id="start_date">
-            </div>
+        <div class="form-group">
+            <label>Detail Description</label>
+            <textarea id="description" rows="10"></textarea>
+        </div>
 
-            <div class="form-group">
-                <label>Detail Description</label>
-                <textarea id="description" rows="8"></textarea>
-            </div>
-
-            <button class="btn-submit" onclick="updateEvent()">UPDATE EVENT</button>
-            <button class="btn-delete" onclick="deleteEvent()">DELETE THIS EVENT</button>
+        <button class="btn-submit" onclick="updateEvent()">UPDATE</button>
+        <button class="btn-delete" onclick="deleteEvent()">Delete this event</button>
+        
+        <div style="text-align:center; margin-top:30px;">
+            <a href="javascript:history.back()" style="color:#999; font-size:12px; text-decoration:none;">Back</a>
         </div>
     </div>
 
@@ -85,89 +76,69 @@
         const supabaseUrl = 'https://daexakehxcvspmthpzzf.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhZXhha2VoeGN2c3BtdGhwenpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyMjc0ODgsImV4cCI6MjA4MzgwMzQ4OH0.xpHRjDPWlch_D80v1QQ9k_CJV6Q39pDa5f9qQ470rMI';
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
-
-        // ★管理者チェック（これ以外の人は強制的にトップへ戻す）
         const ADMIN_EMAIL = "kanaimori2024@gmail.com";
 
         async function init() {
-            // 1. ログインチェック
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            if (!session || session.user.email !== ADMIN_EMAIL) {
-                alert("管理者権限がありません");
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get('id');
+            const { data: { user } } = await supabaseClient.auth.getUser();
+
+            if (!user) return window.location.href = 'login.html';
+
+            const { data: event, error } = await supabaseClient.from('events').select('*').eq('id', id).single();
+            if(error) return alert("Error fetching data");
+
+            // 権限チェック (本人 or 管理者)
+            if (event.user_id !== user.id && user.email !== ADMIN_EMAIL) {
+                alert("You don't have permission to edit this event.");
                 window.location.href = 'index.html';
                 return;
             }
 
-            // 2. URLからIDを取得
-            const params = new URLSearchParams(window.location.search);
-            const id = params.get('id');
-            if(!id) return alert("エラー：IDがありません");
-
-            // 3. データを取得してフォームに入れる
-            const { data, error } = await supabaseClient.from('events').select('*').eq('id', id).single();
-            if(error) return alert("データ取得エラー");
-
-            document.getElementById('title').value = data.title;
-            document.getElementById('category').value = data.category || 'その他';
-            document.getElementById('short_desc').value = data.short_desc || '';
-            document.getElementById('start_date').value = data.date;
-            document.getElementById('description').value = data.description || '';
+            // フォームに値をセット
+            document.getElementById('title').value = event.title;
+            document.getElementById('category').value = event.category || 'その他';
+            document.getElementById('short_desc').value = event.short_desc || '';
+            document.getElementById('start_date').value = event.date;
+            document.getElementById('description').value = event.description || '';
             
-            if(data.image_url) {
-                document.getElementById('current-image').innerHTML = `<img src="${data.image_url}" style="width:100px; border-radius:4px;">`;
-            } else {
-                document.getElementById('current-image').innerText = "No Image";
+            if(event.image_url) {
+                document.getElementById('current-image-preview').innerHTML = `<img src="${event.image_url}" width="100" style="border-radius:4px;">`;
             }
         }
 
-        // 上書き保存
         async function updateEvent() {
-            const params = new URLSearchParams(window.location.search);
-            const id = params.get('id');
+            const id = new URLSearchParams(window.location.search).get('id');
+            const file = document.getElementById('image').files[0];
+            
+            let updates = {
+                title: document.getElementById('title').value,
+                category: document.getElementById('category').value,
+                short_desc: document.getElementById('short_desc').value,
+                date: document.getElementById('start_date').value,
+                description: document.getElementById('description').value
+            };
 
-            const title = document.getElementById('title').value;
-            const category = document.getElementById('category').value;
-            const short_desc = document.getElementById('short_desc').value;
-            const description = document.getElementById('description').value;
-            const startDate = document.getElementById('start_date').value;
-            const imageFile = document.getElementById('image').files[0];
+            if(file) {
+                const fileName = Date.now() + '_' + file.name;
+                await supabaseClient.storage.from('images').upload(fileName, file);
+                const { data } = supabaseClient.storage.from('images').getPublicUrl(fileName);
+                updates.image_url = data.publicUrl;
+            }
 
-            if (!title || !startDate) return alert("タイトルと日付は必須です");
-
-            try {
-                let updateData = { title, category, short_desc, description, date: startDate };
-
-                // 画像が新しく選ばれていればアップロードしてURL更新
-                if (imageFile) {
-                    const fileName = Date.now() + '_' + imageFile.name;
-                    await supabaseClient.storage.from('images').upload(fileName, imageFile);
-                    const { data } = supabaseClient.storage.from('images').getPublicUrl(fileName);
-                    updateData.image_url = data.publicUrl;
-                }
-
-                const { error } = await supabaseClient.from('events').update(updateData).eq('id', id);
-
-                if (error) throw error;
-                alert("更新しました！");
-                window.location.href = `event.html?id=${id}`;
-
-            } catch (error) {
-                alert("エラー: " + error.message);
+            const { error } = await supabaseClient.from('events').update(updates).eq('id', id);
+            if(error) alert(error.message);
+            else {
+                alert("Updated successfully!");
+                history.back();
             }
         }
 
-        // 削除機能
         async function deleteEvent() {
-            if(!confirm("本当にこのイベントを削除しますか？\n（元に戻せません）")) return;
-
-            const params = new URLSearchParams(window.location.search);
-            const id = params.get('id');
-            
-            const { error } = await supabaseClient.from('events').delete().eq('id', id);
-            if(error) return alert("削除エラー: " + error.message);
-            
-            alert("削除しました");
-            window.location.href = 'index.html';
+            if(!confirm("Delete this event?")) return;
+            const id = new URLSearchParams(window.location.search).get('id');
+            await supabaseClient.from('events').delete().eq('id', id);
+            window.location.href = 'mypage.html';
         }
 
         init();
