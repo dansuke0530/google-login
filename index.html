@@ -6,21 +6,21 @@
     <title>EventSite</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* --- このページ専用のレイアウト --- */
-        .wrapper { 
-            max-width: 1200px; margin: 0 auto; padding: 60px 30px; 
-            display: flex; gap: 60px; align-items: flex-start; 
-        }
-
-        /* メインエリア */
+        /* レイアウト */
+        .wrapper { max-width: 1200px; margin: 0 auto; padding: 60px 30px; display: flex; gap: 60px; align-items: flex-start; }
         main { flex: 3; width: 100%; }
-        .page-title { font-size: 12px; color: #aaa; margin-bottom: 40px; font-weight: 500; letter-spacing: 0.2em; text-transform: uppercase; }
+        
+        .page-header-area { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
+        .page-title { font-size: 12px; color: #aaa; font-weight: 500; letter-spacing: 0.2em; text-transform: uppercase; margin: 0; }
+        .current-filter { font-size: 12px; font-weight: bold; background: #000; color: #fff; padding: 4px 10px; border-radius: 50px; display: none; } /* フィルタ中の表示 */
 
+        /* グリッド */
         .event-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 60px 40px; }
         
-        /* カードデザイン（ミニマル） */
+        /* カード */
         .event-card { cursor: pointer; display: flex; flex-direction: column; gap: 15px; }
-        .image-wrapper { width: 100%; aspect-ratio: 16/10; background: #f5f5f5; overflow: hidden; border-radius: 2px; }
+        .image-wrapper { width: 100%; aspect-ratio: 16/10; background: #f5f5f5; overflow: hidden; border-radius: 2px; position: relative; }
+        .category-label { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.9); padding: 4px 10px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
         .card-image { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease; }
         .event-card:hover .card-image { transform: scale(1.05); }
         .no-image { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; color: #ccc; font-size: 11px; letter-spacing: 0.1em; }
@@ -38,8 +38,12 @@
         input[type="text"] { width: 100%; padding: 12px; border: 1px solid #f0f0f0; background: #f9f9f9; border-radius: 4px; font-size: 13px; box-sizing: border-box; }
         input[type="text"]:focus { outline: none; border-color: #ccc; background: #fff; }
         
-        .tag-list span { display: inline-block; border: 1px solid #eee; padding: 6px 15px; font-size: 11px; margin: 0 5px 5px 0; cursor: pointer; border-radius: 50px; color: #666; }
+        /* タグボタン */
+        .tag-list span { display: inline-block; border: 1px solid #eee; padding: 6px 15px; font-size: 11px; margin: 0 5px 5px 0; cursor: pointer; border-radius: 50px; color: #666; transition: 0.2s; }
         .tag-list span:hover { border-color: #000; color: #000; }
+        
+        /* 選択中のタグのデザイン */
+        .tag-list span.active { background: #000; color: #fff; border-color: #000; }
 
         @media (max-width: 768px) {
             .wrapper { flex-direction: column; gap: 40px; }
@@ -53,7 +57,11 @@
 
     <div class="wrapper">
         <main>
-            <div class="page-title">Latest Events</div>
+            <div class="page-header-area">
+                <h2 class="page-title">Latest Events</h2>
+                <span id="filter-badge" class="current-filter"></span>
+            </div>
+            
             <div id="event-list" class="event-grid">
                 <p style="color:#ccc;">Loading...</p>
             </div>
@@ -62,12 +70,16 @@
         <aside>
             <div class="sidebar-box">
                 <div class="sidebar-title">SEARCH</div>
-                <input type="text" placeholder="Keywords...">
+                <input type="text" id="search-input" placeholder="Type and hit Enter...">
             </div>
             <div class="sidebar-box">
-                <div class="sidebar-title">TAGS</div>
-                <div class="tag-list">
-                    <span>#Design</span> <span>#Technology</span> <span>#Art</span> <span>#Business</span>
+                <div class="sidebar-title">CATEGORY</div>
+                <div class="tag-list" id="tag-container">
+                    <span onclick="filterByCategory('Design', this)">Design</span>
+                    <span onclick="filterByCategory('Technology', this)">Technology</span>
+                    <span onclick="filterByCategory('Business', this)">Business</span>
+                    <span onclick="filterByCategory('Art', this)">Art</span>
+                    <span onclick="filterByCategory('Other', this)">Other</span>
                 </div>
             </div>
         </aside>
@@ -78,20 +90,45 @@
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhZXhha2VoeGN2c3BtdGhwenpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyMjc0ODgsImV4cCI6MjA4MzgwMzQ4OH0.xpHRjDPWlch_D80v1QQ9k_CJV6Q39pDa5f9qQ470rMI';
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
+        // 現在の絞り込み状態を保存する変数
+        let currentKeyword = "";
+        let currentCategory = "";
+
         function formatDateDisplay(start) {
             const d = new Date(start);
             return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
         }
 
+        // メイン：イベント取得関数（検索・絞り込み対応）
         async function fetchEvents() {
             const listArea = document.getElementById('event-list');
-            const { data, error } = await supabaseClient.from('events').select('*').order('date', { ascending: false });
+            listArea.innerHTML = '<p style="color:#ccc;">Searching...</p>';
+            
+            // クエリ作成の開始
+            let query = supabaseClient
+                .from('events')
+                .select('*')
+                .order('date', { ascending: false });
 
-            if (error || !data || data.length === 0) return listArea.innerHTML = '<p style="color:#ccc;">No events found.</p>';
+            // ★キーワードがあれば検索条件追加（タイトルに含まれるか）
+            if (currentKeyword) {
+                query = query.ilike('title', `%${currentKeyword}%`);
+            }
+
+            // ★カテゴリがあれば絞り込み条件追加
+            if (currentCategory) {
+                query = query.eq('category', currentCategory);
+            }
+
+            const { data, error } = await query;
+
+            if (error) return listArea.innerHTML = `<p>Error: ${error.message}</p>`;
+            if (!data || data.length === 0) return listArea.innerHTML = '<p style="color:#ccc;">No events found.</p>';
 
             listArea.innerHTML = data.map(event => `
                 <div class="event-card" onclick="location.href='event.html?id=${event.id}'">
                     <div class="image-wrapper">
+                        ${event.category ? `<span class="category-label">${event.category}</span>` : ''}
                         ${event.image_url ? `<img src="${event.image_url}" class="card-image">` : `<div class="no-image">NO IMAGE</div>`}
                     </div>
                     <div class="event-info">
@@ -101,7 +138,51 @@
                     </div>
                 </div>
             `).join('');
+
+            // バッジ表示更新
+            updateBadge();
         }
+
+        // キーワード検索処理
+        document.getElementById('search-input').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                currentKeyword = this.value;
+                fetchEvents();
+            }
+        });
+
+        // カテゴリ絞り込み処理
+        function filterByCategory(category, element) {
+            // すでに同じカテゴリを選択していたら解除
+            if (currentCategory === category) {
+                currentCategory = "";
+                element.classList.remove('active');
+            } else {
+                // 違うカテゴリなら切り替え
+                currentCategory = category;
+                // 他のactiveを消す
+                document.querySelectorAll('.tag-list span').forEach(el => el.classList.remove('active'));
+                // これをactiveに
+                element.classList.add('active');
+            }
+            fetchEvents();
+        }
+
+        function updateBadge() {
+            const badge = document.getElementById('filter-badge');
+            let text = [];
+            if (currentCategory) text.push(currentCategory);
+            if (currentKeyword) text.push(`"${currentKeyword}"`);
+
+            if (text.length > 0) {
+                badge.innerText = "Filter: " + text.join(" + ");
+                badge.style.display = "block";
+            } else {
+                badge.style.display = "none";
+            }
+        }
+
+        // 初回読み込み
         fetchEvents();
     </script>
 </body>
