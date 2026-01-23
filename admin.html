@@ -3,102 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register Event</title>
+    <title>イベント登録</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* --- 登録画面専用デザイン --- */
-        .wrapper { max-width: 680px; margin: 0 auto; padding: 60px 30px; }
-        .page-header { text-align: center; margin-bottom: 60px; }
-        .page-title { font-size: 24px; font-weight: 700; margin-bottom: 10px; letter-spacing: 0.05em; font-family: 'Manrope', sans-serif; }
-        .page-desc { font-size: 13px; color: #999; font-family: 'Noto Sans JP', sans-serif; }
-
-        .form-group { margin-bottom: 40px; }
-        label { display: block; font-size: 12px; font-weight: 600; color: #333; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.1em; font-family: 'Manrope', sans-serif; }
-
-        input[type="text"], input[type="date"], input[type="time"], textarea, select { 
-            width: 100%; padding: 15px 0; border: none; border-bottom: 1px solid #eee; 
-            font-size: 15px; font-family: inherit; background: transparent; border-radius: 0; transition: 0.3s;
+        body { font-family: 'Manrope', 'Noto Sans JP', sans-serif; background: #f4f6f8; margin: 0; padding: 40px 20px; color: #333; }
+        .wrapper { max-width: 600px; margin: 0 auto; background: #fff; padding: 40px; border-radius: 12px; border: 1px solid #eee; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+        
+        h1 { font-size: 20px; font-weight: 800; text-align: center; margin-bottom: 30px; letter-spacing: 1px; }
+        
+        .form-group { margin-bottom: 25px; }
+        label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 8px; }
+        .note { font-size: 11px; color: #888; margin-top: 5px; line-height: 1.4; }
+        
+        input, textarea, select { 
+            width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 6px; 
+            font-size: 14px; box-sizing: border-box; background: #fafafa; font-family: inherit;
         }
-        input:focus, textarea:focus, select:focus { outline: none; border-bottom-color: #000; }
-        select { cursor: pointer; color: #333; }
-        input[type="file"] { font-size: 12px; color: #666; padding: 10px 0; }
-
-        .toggle-group { display: flex; gap: 20px; margin-top: 10px; }
-        .toggle-label { font-size: 13px; cursor: pointer; color: #999; padding-bottom: 5px; border-bottom: 2px solid transparent; transition: 0.3s; }
-        .toggle-group input:checked + .toggle-label { color: #000; border-bottom-color: #000; font-weight: 600; }
-        .toggle-group input { display: none; }
-
-        .date-row, .time-row { display: flex; gap: 20px; align-items: center; }
-        .btn-submit { width: 100%; padding: 20px; background: #000; color: #fff; border: none; border-radius: 4px; font-size: 14px; font-weight: 600; letter-spacing: 0.1em; cursor: pointer; margin-top: 40px; transition: 0.3s; }
+        input:focus { border-color: #000; background: #fff; outline: none; }
+        
+        .btn-submit { width: 100%; padding: 16px; background: #000; color: #fff; border: none; border-radius: 6px; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 10px; }
         .btn-submit:hover { opacity: 0.8; }
+        
+        .back-link { display: block; text-align: center; margin-top: 30px; font-size: 12px; color: #999; text-decoration: none; }
     </style>
 </head>
 <body>
-    <script src="common.js"></script>
-
     <div class="wrapper">
-        <div class="page-header">
-            <h1 class="page-title">NEW EVENT</h1>
-            <p class="page-desc">新しいイベント情報を入力してください</p>
+        <h1>新規イベント登録</h1>
+
+        <div class="form-group">
+            <label>イベント名 (必須)</label>
+            <input type="text" id="title" placeholder="例：Webデザイン交流会 vol.1">
         </div>
 
-        <div class="form-container">
-            <div class="form-group">
-                <label>Event Title</label>
-                <input type="text" id="title" placeholder="イベントタイトル...">
-            </div>
-
-            <div class="form-group">
-                <label>Tag</label>
-                <select id="category">
-                    <option value="">タグを選択してください...</option>
-                    <option value="集う">集う</option>
-                    <option value="学ぶ">学ぶ</option>
-                    <option value="観る">観る</option>
-                    <option value="動く">動く</option>
-                    <option value="貢献する">貢献する</option>
-                    <option value="その他">その他</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label>Main Image</label>
-                <input type="file" id="image" accept="image/*">
-            </div>
-
-            <div class="form-group">
-                <label>Short Description</label>
-                <input type="text" id="short_desc" maxlength="40" placeholder="一覧用キャッチコピー...">
-            </div>
-
-            <div class="form-group">
-                <label>Date & Time</label>
-                <div class="toggle-group" style="margin-bottom: 20px;">
-                    <label><input type="radio" name="dateType" value="single" checked onchange="toggleDateInputs()"><span class="toggle-label">Single Day</span></label>
-                    <label><input type="radio" name="dateType" value="multi" onchange="toggleDateInputs()"><span class="toggle-label">Multi Day</span></label>
-                </div>
-                <div class="date-row">
-                    <input type="date" id="start_date">
-                    <div id="end-date-area" style="display:none; flex:1;">
-                        <div style="display:flex; align-items:center; gap:10px;"><span>-</span> <input type="date" id="end_date"></div>
-                    </div>
-                </div>
-                <div class="toggle-group" style="margin: 20px 0;">
-                    <label><input type="radio" name="timeType" value="none" checked onchange="toggleTimeInputs()"><span class="toggle-label">No Time</span></label>
-                    <label><input type="radio" name="timeType" value="specify" onchange="toggleTimeInputs()"><span class="toggle-label">Set Time</span></label>
-                </div>
-                <div id="time-area" class="time-row" style="display:none;">
-                    <input type="time" id="start_time"><span>-</span><input type="time" id="end_time">
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Detail Description</label>
-                <textarea id="description" rows="8" placeholder="詳細内容..."></textarea>
-            </div>
-
-            <button class="btn-submit" onclick="addEvent()">PUBLISH EVENT</button>
+        <div class="form-group">
+            <label>カテゴリー</label>
+            <select id="category">
+                <option value="集う">集う</option>
+                <option value="学ぶ">学ぶ</option>
+                <option value="観る">観る</option>
+                <option value="動く">動く</option>
+                <option value="貢献する">貢献する</option>
+                <option value="その他">その他</option>
+            </select>
         </div>
+
+        <div class="form-group">
+            <label>メイン画像</label>
+            <input type="file" id="image" accept="image/*">
+            <div class="note">
+                ※ サイズ制限はありません。自動で綺麗にトリミング（切り抜き表示）されます。<br>
+                ※ 推奨比率は 16:9（横長）や 4:3 です。
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>短い説明 (一覧表示用)</label>
+            <input type="text" id="short_desc" placeholder="30文字程度で簡潔に">
+        </div>
+
+        <div class="form-group">
+            <label>開催日 (必須)</label>
+            <input type="date" id="start_date">
+        </div>
+
+        <div class="form-group">
+            <label>詳細説明</label>
+            <textarea id="description" rows="6" placeholder="イベントの詳細内容を入力してください"></textarea>
+        </div>
+
+        <button class="btn-submit" onclick="addEvent()">イベントを登録する</button>
+        <a href="javascript:history.back()" class="back-link">キャンセルして戻る</a>
     </div>
 
     <script>
@@ -106,65 +82,40 @@
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhZXhha2VoeGN2c3BtdGhwenpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyMjc0ODgsImV4cCI6MjA4MzgwMzQ4OH0.xpHRjDPWlch_D80v1QQ9k_CJV6Q39pDa5f9qQ470rMI';
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-        function toggleDateInputs() {
-            const isMulti = document.querySelector('input[name="dateType"]:checked').value === 'multi';
-            document.getElementById('end-date-area').style.display = isMulti ? 'block' : 'none';
-        }
-        function toggleTimeInputs() {
-            const isSpecify = document.querySelector('input[name="timeType"]:checked').value === 'specify';
-            document.getElementById('time-area').style.display = isSpecify ? 'flex' : 'none';
-        }
-
         async function addEvent() {
             const title = document.getElementById('title').value;
             const category = document.getElementById('category').value;
             const short_desc = document.getElementById('short_desc').value;
             const description = document.getElementById('description').value;
             const startDate = document.getElementById('start_date').value;
-            let endDate = document.getElementById('end_date').value;
-            if (document.querySelector('input[name="dateType"]:checked').value === 'single') endDate = startDate;
-
-            let startTime = null;
-            let endTime = null;
-            if (document.querySelector('input[name="timeType"]:checked').value === 'specify') {
-                startTime = document.getElementById('start_time').value;
-                endTime = document.getElementById('end_time').value;
-            }
-
             const imageFile = document.getElementById('image').files[0];
-            let imageUrl = null;
 
-            if (!title || !startDate) return alert("タイトルと開催日は必須です");
+            if (!title || !startDate) return alert("タイトルと日付は必須です");
+
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            if(!user) return alert("ログインしてください");
 
             try {
+                let imageUrl = null;
                 if (imageFile) {
                     const fileName = Date.now() + '_' + imageFile.name;
-                    const { error: uploadError } = await supabaseClient.storage.from('images').upload(fileName, imageFile);
-                    if (uploadError) throw uploadError;
+                    await supabaseClient.storage.from('images').upload(fileName, imageFile);
                     const { data } = supabaseClient.storage.from('images').getPublicUrl(fileName);
                     imageUrl = data.publicUrl;
                 }
 
-                const { error } = await supabaseClient.from('events').insert([{ 
-                    title, category, short_desc, date: startDate, end_date: endDate,
-                    start_time: startTime, end_time: endTime, description,
-                    image_url: imageUrl
+                const { error } = await supabaseClient.from('events').insert([{
+                    title, category, short_desc, description, date: startDate, 
+                    image_url: imageUrl, user_id: user.id
                 }]);
 
                 if (error) throw error;
-                alert("登録完了しました");
-                window.location.href = 'index.html';
-
+                alert("登録しました！");
+                window.location.href = 'mypage.html';
             } catch (error) {
                 alert("エラー: " + error.message);
             }
         }
-        
-        async function checkAuth() {
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            if (!session) window.location.href = 'login.html';
-        }
-        checkAuth();
     </script>
 </body>
 </html>
