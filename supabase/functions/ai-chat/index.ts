@@ -7,6 +7,7 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  // CORS（ブラウザからのアクセス許可）の処理
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -15,39 +16,53 @@ serve(async (req) => {
     const requestData = await req.json();
     const { message, events } = requestData;
 
-    // ★修正ポイント：タイムゾーンを日本に固定！
+    // ★重要：日本時間で今日の日付を取得
     const today = new Date().toLocaleDateString("ja-JP", {
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
-      timeZone: "Asia/Tokyo", // これがないと海外時間になります
+      timeZone: "Asia/Tokyo",
     }).replaceAll('/', '-');
 
+    // AIへの命令（プロンプト）
     const systemPrompt = `
-      あなたはイベント検索サイトのAIコンシェルジュです。
-      
-      【超重要：現在日時】
-      今日は「${today}」です。
-      （この日付より後なら「未来」、前なら「過去・終了済み」と判定してください）
+      あなたはイベント検索サイトの「気が利く」AIコンシェルジュです。
+      ユーザーのチャットに対し、以下のイベントリストを使って返答してください。
+
+      【現在の日付（日本時間）】: ${today}
       
       【イベントリスト】
       ${JSON.stringify(events)}
       
       【回答のルール】
-      1. ユーザーの質問に対し、リストの中から最適なイベントを紹介してください。
-      2. 「おすすめは？」と聞かれたら、基本的には「未来のイベント」を紹介してください。
-      3. もし未来のイベントがあっても、ユーザーの興味に合わなさそうなら過去のものも検討してください。
-      4. ★重要：もし「未来のイベント」があるのに「ありません」と答えるのは禁止です。必ずリストを確認してください。
+      1. 基本は「未来のイベント（日付が今日以降）」を優先して紹介してください。
+      
+      2. ★重要：もし「未来のイベント」が1件もない場合★
+         絶対に「イベントはありません」だけで終わらせないでください。
+         「現在は予定されているイベントはありませんが、直近ではこんなイベントを開催しました！」
+         と前置きして、リストの中で一番日付が新しい「過去のイベント」を1つ紹介してください。
 
-      【出力フォーマット（JSONのみ）】
+      3. 「次のイベントは？」と聞かれた時も同様に、未来の予定がなければ
+         「次回の開催は未定ですが、前回は〜」と過去のものを紹介してください。
+
+      4. 雑談（挨拶など）には短くフレンドリーに答えてください。
+
+      【出力フォーマット（必ずこのJSON形式のみで出力）】
       {
-        "reply": "回答メッセージ（今日が${today}であることを意識して話してOK）",
+        "reply": "ユーザーへの返信メッセージ（100文字以内）",
         "recommendations": [
-          { "id": "...", "title": "...", "short_desc": "...", "image_url": "..." }
+          { 
+            "id": "イベントID", 
+            "title": "タイトル", 
+            "short_desc": "短い説明", 
+            "image_url": "画像URL" 
+          }
         ]
       }
+      ※該当イベントがない場合は "recommendations": [] にしてください。
     `;
 
+    // OpenAI APIを叩く
     const openAIResponse = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -56,7 +71,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model: "gpt-3.5-turbo-0125",
-        response_format: { type: "json_object" },
+        response_format: { type: "json_object" }, // JSONモードを強制
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: message },
@@ -70,20 +85,35 @@ serve(async (req) => {
     }
 
     const data = await openAIResponse.json();
-    const content = data.choices[0].message.content;
-    let parsed;
-    try { parsed = JSON.parse(content); } 
-    catch (e) { parsed = { reply: content, recommendations: [] }; }
+    const aiContent = data.choices[0].message.content;
+    
+    // AIの返答をパース（解析）する
+    let parsedContent;
+    try {
+      parsedContent = JSON.parse(aiContent);
+    } catch (e) {
+      // 万が一JSONじゃない形式で返ってきた場合の保険
+      console.error("JSON Parse Error:", e);
+      parsedContent = { 
+        reply: aiContent, 
+        recommendations: [] 
+      };
+    }
 
-    return new Response(JSON.stringify(parsed), {
+    // クライアント（画面）に返す
+    return new Response(JSON.stringify(parsedContent), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
 
   } catch (error) {
+    console.error("Server Error:", error.message);
     return new Response(JSON.stringify({ 
-      reply: "エラーが発生しました。", error: error.message 
+      reply: "申し訳ありません。現在サーバーが混み合っており、応答できませんでした。", 
+      error: error.message,
+      recommendations: [] 
     }), {
-      status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }
+      status: 200, // フロントエンドがエラー画面にならないよう200で返して、メッセージで伝える
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });

@@ -1,10 +1,10 @@
 // chat.js
-// ★デザインリニューアル版（左右吹き出し＆ローディングアニメーション）★
+// ★UI/UX改善：ローディング独立制御＆安全装置付き版★
 
-// あなたのプロジェクトURL
+// プロジェクトURL
 const FUNCTION_URL = 'https://daexakehxcvspmthpzzf.supabase.co/functions/v1/ai-chat'; 
 
-// チャットウィジェットのHTML構造（CSSでアニメーションを追加）
+// チャットウィジェットHTML
 const chatHTML = `
     <div id="chat-widget" style="display:none;">
         <div class="chat-header">
@@ -23,7 +23,7 @@ const chatHTML = `
     <button id="chat-btn" onclick="toggleChat()">💬</button>
 
     <style>
-        /* --- 基本レイアウト --- */
+        /* スタイル定義 */
         #chat-btn { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 50%; background: #000; color: #fff; border: none; font-size: 24px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 99999; transition: 0.3s; display: flex; align-items: center; justify-content: center; }
         #chat-btn:hover { transform: scale(1.1); }
         
@@ -35,66 +35,36 @@ const chatHTML = `
             border: 1px solid #f0f0f0;
         }
 
-        .chat-header { background: #000; color: #fff; padding: 16px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 15px; letter-spacing: 0.5px; }
+        .chat-header { background: #000; color: #fff; padding: 16px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 15px; }
         .close-btn { background:none; border:none; color:white; font-size:24px; cursor:pointer; line-height: 1; }
 
-        /* --- メッセージエリア（LINE風デザイン） --- */
-        .chat-messages { 
-            flex: 1; padding: 20px; overflow-y: auto; background: #f8f9fa; 
-            display: flex; flex-direction: column; gap: 16px; 
-        }
+        .chat-messages { flex: 1; padding: 20px; overflow-y: auto; background: #f8f9fa; display: flex; flex-direction: column; gap: 16px; }
 
         .message-row { display: flex; width: 100%; }
-        
-        /* AI（左側） */
         .message-row.ai { justify-content: flex-start; }
-        .message-row.ai .message-bubble { 
-            background: #fff; color: #333; 
-            border-top-left-radius: 2px; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            border: 1px solid #e0e0e0;
-        }
-
-        /* ユーザー（右側） */
         .message-row.user { justify-content: flex-end; }
-        .message-row.user .message-bubble { 
-            background: #000; color: #fff; 
-            border-top-right-radius: 2px; 
-        }
-
+        
         .message-bubble {
             max-width: 80%; padding: 12px 16px; border-radius: 14px; 
             font-size: 14px; line-height: 1.6; word-wrap: break-word; position: relative;
         }
+        .message-row.ai .message-bubble { background: #fff; color: #333; border-top-left-radius: 2px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid #e0e0e0; }
+        .message-row.user .message-bubble { background: #000; color: #fff; border-top-right-radius: 2px; }
 
-        /* --- ローディングアニメーション（3点リーダー） --- */
+        /* ローディングアニメーション */
         .typing-indicator { display: flex; align-items: center; gap: 4px; padding: 4px 2px; }
-        .typing-dot {
-            width: 6px; height: 6px; background-color: #b0b0b0; border-radius: 50%;
-            animation: typing 1.4s infinite ease-in-out both;
-        }
+        .typing-dot { width: 6px; height: 6px; background-color: #b0b0b0; border-radius: 50%; animation: typing 1.4s infinite ease-in-out both; }
         .typing-dot:nth-child(1) { animation-delay: -0.32s; }
         .typing-dot:nth-child(2) { animation-delay: -0.16s; }
-        
-        @keyframes typing {
-            0%, 80%, 100% { transform: scale(0); }
-            40% { transform: scale(1); }
-        }
+        @keyframes typing { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
 
-        /* --- イベント提案カード --- */
-        .event-suggestion { 
-            background: #fff; border: 1px solid #eee; border-radius: 10px; padding: 10px; margin-top: 8px; 
-            cursor: pointer; transition: 0.2s; display: flex; gap: 10px; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.03); text-decoration: none; color: inherit; 
-            max-width: 90%; align-self: flex-start;
-        }
+        /* イベントカード */
+        .event-suggestion { background: #fff; border: 1px solid #eee; border-radius: 10px; padding: 10px; margin-top: 8px; cursor: pointer; transition: 0.2s; display: flex; gap: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.03); text-decoration: none; color: inherit; max-width: 90%; align-self: flex-start; }
         .event-suggestion:hover { background: #fafafa; transform: translateY(-2px); border-color: #000; }
         .suggestion-thumb { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; background: #eee; flex-shrink: 0; }
         .suggestion-info { flex: 1; overflow: hidden; display: flex; flex-direction: column; justify-content: center; }
         .suggestion-title { font-weight: bold; font-size: 13px; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .suggestion-desc { font-size: 11px; color: #777; }
-
-        /* --- 入力エリア --- */
         .chat-input-area { padding: 16px; background: #fff; border-top: 1px solid #eee; display: flex; gap: 10px; }
         #chat-input { flex: 1; border: 1px solid #ddd; padding: 12px; border-radius: 24px; outline: none; font-size: 14px; transition: 0.2s; background: #f8f9fa; }
         #chat-input:focus { border-color: #000; background: #fff; }
@@ -103,7 +73,6 @@ const chatHTML = `
     </style>
 `;
 
-// HTML注入
 if (!document.getElementById('chat-widget')) {
     document.body.insertAdjacentHTML('beforeend', chatHTML);
     restoreState();
@@ -121,9 +90,7 @@ function clearChat() {
     if(confirm('会話履歴を消去しますか？')) {
         sessionStorage.removeItem('chat_history');
         document.getElementById('chat-messages').innerHTML = `
-            <div class="message-row ai">
-                <div class="message-bubble">会話をリセットしました ✨</div>
-            </div>`;
+            <div class="message-row ai"><div class="message-bubble">会話をリセットしました ✨</div></div>`;
     }
 }
 
@@ -134,20 +101,17 @@ async function sendMessage() {
     const text = input.value.trim();
     if (!text) return;
 
-    // 1. ユーザーのメッセージを表示（右側・黒）
+    // 1. ユーザーの投稿を表示
     addMessage(text, 'user');
     input.value = '';
     saveHistory();
 
-    // 2. AIのローディングアニメーションを表示（左側・白・・・・）
+    // 2. ローディングを表示（IDを控えておく）
     const loadingHtml = `
         <div class="typing-indicator">
-            <div class="typing-dot"></div>
-            <div class="typing-dot"></div>
-            <div class="typing-dot"></div>
+            <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
         </div>`;
-    const loadingId = addMessage(loadingHtml, 'ai', true); // true = HTMLとして追加
-    const loadingBubble = document.getElementById(loadingId);
+    const loadingId = addMessage(loadingHtml, 'ai', true);
 
     try {
         if (typeof supabaseClient === 'undefined') throw new Error("Supabase読込エラー");
@@ -168,10 +132,18 @@ async function sendMessage() {
 
         const data = await response.json();
         
-        // 3. ローディングを消して、実際の返答に書き換え
-        loadingBubble.innerText = data.reply;
+        // ★重要：ここで必ずローディングを削除する！
+        removeMessage(loadingId);
 
-        // おすすめイベントがあればカードを追加
+        // 3. AIのメッセージがあれば表示（なければ表示しない）
+        if (data.reply && data.reply.trim() !== "") {
+            addMessage(data.reply, 'ai');
+        } else if ((!data.recommendations || data.recommendations.length === 0)) {
+            // 万が一テキストもカードも無い場合
+            addMessage("すみません、うまく情報が見つかりませんでした。", 'ai');
+        }
+
+        // 4. おすすめカードがあれば表示
         if (data.recommendations && data.recommendations.length > 0) {
             const container = document.getElementById('chat-messages');
             data.recommendations.forEach(event => {
@@ -193,34 +165,33 @@ async function sendMessage() {
 
     } catch (error) {
         console.error(error);
-        loadingBubble.innerHTML = `<span style="color:red;">⚠️ エラー: ${error.message}</span>`;
+        // エラー時もローディングを消して、エラーを表示
+        removeMessage(loadingId);
+        addMessage(`⚠️ エラー: ${error.message}`, 'ai');
     }
 }
 
-// メッセージ追加関数（isHtml=trueならHTMLタグを有効にする）
 function addMessage(content, sender, isHtml = false) {
     const container = document.getElementById('chat-messages');
-    
-    // 行（row）を作成
     const row = document.createElement('div');
     row.classList.add('message-row', sender);
-    
-    // 吹き出し（bubble）を作成
     const bubble = document.createElement('div');
     bubble.classList.add('message-bubble');
-    bubble.id = 'msg-' + Date.now(); // 後で書き換えるためにID付与
+    bubble.id = 'msg-' + Date.now() + Math.random(); // ユニークID
 
-    if (isHtml) {
-        bubble.innerHTML = content;
-    } else {
-        bubble.innerText = content;
-    }
+    if (isHtml) bubble.innerHTML = content;
+    else bubble.innerText = content;
 
     row.appendChild(bubble);
     container.appendChild(row);
     container.scrollTop = container.scrollHeight;
+    return row.id; // 行ごとのIDを返すように変更
+}
 
-    return bubble.id; // 吹き出しのIDを返す
+// メッセージ削除用（ローディング消去に使う）
+function removeMessage(elementId) {
+    const el = document.getElementById(elementId);
+    if (el) el.remove();
 }
 
 function saveHistory() {
@@ -230,17 +201,12 @@ function saveHistory() {
 function restoreState() {
     const isOpen = sessionStorage.getItem('chat_is_open') === 'true';
     document.getElementById('chat-widget').style.display = isOpen ? 'flex' : 'none';
-    
     const history = sessionStorage.getItem('chat_history');
     const container = document.getElementById('chat-messages');
     if (history) {
         container.innerHTML = history;
         container.scrollTop = container.scrollHeight;
     } else {
-        // 初回メッセージ
-        container.innerHTML = `
-            <div class="message-row ai">
-                <div class="message-bubble">こんにちは！<br>AIコンシェルジュです🤖</div>
-            </div>`;
+        container.innerHTML = `<div class="message-row ai"><div class="message-bubble">こんにちは！<br>AIコンシェルジュです🤖</div></div>`;
     }
 }
