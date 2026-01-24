@@ -3,162 +3,146 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EventSite</title>
+    <title>EventSite | トップページ</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script src="config.js"></script>
+    <script src="common.js"></script>
+    <script src="sidebar.js"></script> <script src="chat.js?v=2"></script>
+
     <style>
-        .wrapper { max-width: 1200px; margin: 0 auto; padding: 60px 30px; display: flex; gap: 60px; align-items: flex-start; }
-        main { flex: 3; width: 100%; }
-        
-        .page-header-area { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
-        .page-title { font-size: 12px; color: #aaa; font-weight: 500; letter-spacing: 0.2em; text-transform: uppercase; margin: 0; }
-        .current-filter { font-size: 12px; font-weight: bold; background: #000; color: #fff; padding: 4px 10px; border-radius: 50px; display: none; }
-
-        .event-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 60px 40px; }
-        
-        .event-card { cursor: pointer; display: flex; flex-direction: column; gap: 15px; }
-        .image-wrapper { width: 100%; aspect-ratio: 16/10; background: #f5f5f5; overflow: hidden; border-radius: 2px; position: relative; }
-        .category-label { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.9); padding: 4px 10px; font-size: 10px; font-weight: 600; letter-spacing: 0.05em; }
-        .card-image { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease; }
-        .event-card:hover .card-image { transform: scale(1.05); }
-        .no-image { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; color: #ccc; font-size: 11px; letter-spacing: 0.1em; }
-
-        .event-info { display: flex; flex-direction: column; gap: 5px; }
-        .event-date { font-size: 12px; color: #999; }
-        .event-title { font-size: 16px; font-weight: 600; line-height: 1.5; margin: 0; }
-        .event-desc { font-size: 13px; color: #666; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-
-        aside { flex: 1; position: sticky; top: 100px; }
-        .sidebar-box { margin-bottom: 50px; }
-        .sidebar-title { font-size: 12px; font-weight: 600; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 20px; letter-spacing: 0.1em; }
-        
-        input[type="text"] { width: 100%; padding: 12px; border: 1px solid #f0f0f0; background: #f9f9f9; border-radius: 4px; font-size: 13px; box-sizing: border-box; }
-        input[type="text"]:focus { outline: none; border-color: #ccc; background: #fff; }
-        
-        .tag-list span { display: inline-block; border: 1px solid #eee; padding: 6px 15px; font-size: 11px; margin: 0 5px 5px 0; cursor: pointer; border-radius: 50px; color: #666; transition: 0.2s; }
-        .tag-list span:hover { border-color: #000; color: #000; }
-        .tag-list span.active { background: #000; color: #fff; border-color: #000; }
+        /* 2カラムレイアウト（event.htmlと同じ構造） */
+        .page-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+            display: flex;
+            gap: 40px;
+            align-items: flex-start;
+        }
+        .main-content { flex: 1; min-width: 0; }
+        .sidebar-area { width: 300px; flex-shrink: 0; }
 
         @media (max-width: 768px) {
-            .wrapper { flex-direction: column; gap: 40px; }
-            .event-grid { grid-template-columns: 1fr; }
-            aside { position: static; width: 100%; }
+            .page-container { flex-direction: column; }
+            .sidebar-area { width: 100%; order: -1; /* スマホでは検索を上に持ってくる */ margin-bottom: 20px;}
+        }
+
+        /* イベントカードのスタイル */
+        .event-list { display: grid; gap: 20px; }
+        .event-card {
+            display: flex; gap: 20px; border: 1px solid #eee; border-radius: 12px;
+            overflow: hidden; background: #fff; transition: 0.3s;
+            cursor: pointer; text-decoration: none; color: inherit;
+        }
+        .event-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .card-thumb { width: 200px; height: 100%; object-fit: cover; background: #eee; }
+        .card-info { padding: 20px; flex: 1; display: flex; flex-direction: column; justify-content: center; }
+        .card-date { color: #888; font-size: 12px; margin-bottom: 5px; }
+        .card-title { font-size: 18px; font-weight: bold; margin-bottom: 8px; }
+        .card-desc { font-size: 13px; color: #555; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+        @media (max-width: 600px) {
+            .event-card { flex-direction: column; }
+            .card-thumb { width: 100%; height: 150px; }
+        }
+        
+        /* 検索結果メッセージ */
+        .filter-msg { 
+            background: #f0f0f0; padding: 10px 20px; border-radius: 8px; 
+            margin-bottom: 20px; font-size: 14px; display: none; 
         }
     </style>
 </head>
 <body>
-    <script src="common.js"></script>
 
-    <div class="wrapper">
-        <main>
-            <div class="page-header-area">
-                <h2 class="page-title">Latest Events</h2>
-                <span id="filter-badge" class="current-filter"></span>
-            </div>
-            
-            <div id="event-list" class="event-grid">
-                <p style="color:#ccc;">Loading...</p>
-            </div>
-        </main>
+    <div class="page-container">
         
-        <aside>
-            <div class="sidebar-box">
-                <div class="sidebar-title">SEARCH</div>
-                <input type="text" id="search-input" placeholder="Type and hit Enter...">
+        <div class="main-content">
+            <div id="filter-message" class="filter-msg"></div>
+
+            <div id="event-list" class="event-list">
+                <div>読み込み中...</div>
             </div>
-            <div class="sidebar-box">
-                <div class="sidebar-title">TAGS</div>
-                <div class="tag-list" id="tag-container">
-                    <span onclick="filterByCategory('集う', this)">集う</span>
-                    <span onclick="filterByCategory('学ぶ', this)">学ぶ</span>
-                    <span onclick="filterByCategory('観る', this)">観る</span>
-                    <span onclick="filterByCategory('動く', this)">動く</span>
-                    <span onclick="filterByCategory('貢献する', this)">貢献する</span>
-                    <span onclick="filterByCategory('その他', this)">その他</span>
-                </div>
-            </div>
-        </aside>
+        </div>
+
+        <div class="sidebar-area">
+            <div id="sidebar-placeholder"></div>
+        </div>
+
     </div>
 
     <script>
-        const supabaseUrl = 'https://daexakehxcvspmthpzzf.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhZXhha2VoeGN2c3BtdGhwenpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyMjc0ODgsImV4cCI6MjA4MzgwMzQ4OH0.xpHRjDPWlch_D80v1QQ9k_CJV6Q39pDa5f9qQ470rMI';
-        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
-
-        let currentKeyword = "";
-        let currentCategory = "";
-
-        function formatDateDisplay(start) {
-            const d = new Date(start);
-            return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
-        }
-
-        async function fetchEvents() {
-            const listArea = document.getElementById('event-list');
-            listArea.innerHTML = '<p style="color:#ccc;">Searching...</p>';
+        // ★イベント取得＆フィルタリングの統合ロジック
+        window.addEventListener('load', async () => {
             
-            let query = supabaseClient.from('events').select('*').order('date', { ascending: false });
+            // 1. URLパラメータを確認（sidebar.jsから飛んできた場合）
+            const params = new URLSearchParams(window.location.search);
+            const searchKeyword = params.get('q');   // 検索ワード
+            const categoryTag = params.get('cat');   // カテゴリタグ
 
-            if (currentKeyword) query = query.ilike('title', `%${currentKeyword}%`);
-            if (currentCategory) query = query.eq('category', currentCategory);
+            // 2. イベントを全件取得
+            const { data: events, error } = await supabaseClient
+                .from('events')
+                .select('*')
+                .order('date', { ascending: true }); // 日付順
 
-            const { data, error } = await query;
-
-            if (error) return listArea.innerHTML = `<p>Error: ${error.message}</p>`;
-            if (!data || data.length === 0) return listArea.innerHTML = '<p style="color:#ccc;">No events found.</p>';
-
-            listArea.innerHTML = data.map(event => `
-                <div class="event-card" onclick="location.href='event.html?id=${event.id}'">
-                    <div class="image-wrapper">
-                        ${event.category ? `<span class="category-label">${event.category}</span>` : ''}
-                        ${event.image_url ? `<img src="${event.image_url}" class="card-image">` : `<div class="no-image">NO IMAGE</div>`}
-                    </div>
-                    <div class="event-info">
-                        <span class="event-date">${formatDateDisplay(event.date)}</span>
-                        <h3 class="event-title">${event.title}</h3>
-                        <p class="event-desc">${event.short_desc || ''}</p>
-                    </div>
-                </div>
-            `).join('');
-
-            updateBadge();
-        }
-
-        document.getElementById('search-input').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                currentKeyword = this.value;
-                fetchEvents();
+            if (error) {
+                document.getElementById('event-list').innerHTML = '<p>エラーが発生しました</p>';
+                console.error(error);
+                return;
             }
+
+            let filteredEvents = events;
+            const msgEl = document.getElementById('filter-message');
+
+            // 3. フィルタリング実行
+            if (searchKeyword) {
+                // キーワード検索
+                filteredEvents = events.filter(e => 
+                    e.title.includes(searchKeyword) || 
+                    (e.description && e.description.includes(searchKeyword))
+                );
+                msgEl.style.display = 'block';
+                msgEl.innerHTML = `🔍 <strong>「${searchKeyword}」</strong> の検索結果 (${filteredEvents.length}件) <a href="index.html" style="float:right; color:#000;">クリア ×</a>`;
+            
+                // サイドバーの検索窓にも言葉を入れておく（UX向上）
+                setTimeout(() => {
+                    const input = document.getElementById('common-search-input');
+                    if(input) input.value = searchKeyword;
+                }, 500);
+
+            } else if (categoryTag) {
+                // カテゴリ検索
+                filteredEvents = events.filter(e => e.category === categoryTag);
+                msgEl.style.display = 'block';
+                msgEl.innerHTML = `🏷️ <strong>Category: ${categoryTag}</strong> (${filteredEvents.length}件) <a href="index.html" style="float:right; color:#000;">クリア ×</a>`;
+            }
+
+            // 4. 一覧を表示
+            const listContainer = document.getElementById('event-list');
+            listContainer.innerHTML = '';
+
+            if (filteredEvents.length === 0) {
+                listContainer.innerHTML = '<p>該当するイベントはありませんでした。</p>';
+                return;
+            }
+
+            filteredEvents.forEach(event => {
+                const img = event.image_url || 'https://placehold.co/400x200/eee/999?text=No+Image';
+                const html = `
+                    <a href="event.html?id=${event.id}" class="event-card">
+                        <img src="${img}" class="card-thumb" alt="${event.title}">
+                        <div class="card-info">
+                            <div class="card-date">📅 ${event.date} | ${event.category}</div>
+                            <div class="card-title">${event.title}</div>
+                            <div class="card-desc">${event.short_desc || event.description || ''}</div>
+                        </div>
+                    </a>
+                `;
+                listContainer.insertAdjacentHTML('beforeend', html);
+            });
         });
-
-        function filterByCategory(category, element) {
-            if (currentCategory === category) {
-                currentCategory = "";
-                element.classList.remove('active');
-            } else {
-                currentCategory = category;
-                document.querySelectorAll('.tag-list span').forEach(el => el.classList.remove('active'));
-                element.classList.add('active');
-            }
-            fetchEvents();
-        }
-
-        function updateBadge() {
-            const badge = document.getElementById('filter-badge');
-            let text = [];
-            if (currentCategory) text.push(currentCategory);
-            if (currentKeyword) text.push(`"${currentKeyword}"`);
-
-            if (text.length > 0) {
-                badge.innerText = "Filter: " + text.join(" + ");
-                badge.style.display = "block";
-            } else {
-                badge.style.display = "none";
-            }
-        }
-
-        fetchEvents();
     </script>
-    
-    <script src="chat.js"></script>
 </body>
 </html>
