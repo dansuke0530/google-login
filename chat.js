@@ -1,10 +1,8 @@
 // chat.js
-// ★UI/UX改善：ローディング独立制御＆安全装置付き版★
+// ★修正版：ローディングが消えないバグを解消★
 
-// プロジェクトURL
 const FUNCTION_URL = 'https://daexakehxcvspmthpzzf.supabase.co/functions/v1/ai-chat'; 
 
-// チャットウィジェットHTML
 const chatHTML = `
     <div id="chat-widget" style="display:none;">
         <div class="chat-header">
@@ -23,42 +21,27 @@ const chatHTML = `
     <button id="chat-btn" onclick="toggleChat()">💬</button>
 
     <style>
-        /* スタイル定義 */
         #chat-btn { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 50%; background: #000; color: #fff; border: none; font-size: 24px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 99999; transition: 0.3s; display: flex; align-items: center; justify-content: center; }
         #chat-btn:hover { transform: scale(1.1); }
-        
-        #chat-widget { 
-            position: fixed; bottom: 100px; right: 30px; width: 360px; height: 550px; 
-            background: #fff; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); 
-            display: flex; flex-direction: column; overflow: hidden; z-index: 99999; 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            border: 1px solid #f0f0f0;
-        }
-
+        #chat-widget { position: fixed; bottom: 100px; right: 30px; width: 360px; height: 550px; background: #fff; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); display: flex; flex-direction: column; overflow: hidden; z-index: 99999; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; border: 1px solid #f0f0f0; }
         .chat-header { background: #000; color: #fff; padding: 16px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 15px; }
         .close-btn { background:none; border:none; color:white; font-size:24px; cursor:pointer; line-height: 1; }
-
         .chat-messages { flex: 1; padding: 20px; overflow-y: auto; background: #f8f9fa; display: flex; flex-direction: column; gap: 16px; }
-
+        
         .message-row { display: flex; width: 100%; }
         .message-row.ai { justify-content: flex-start; }
         .message-row.user { justify-content: flex-end; }
         
-        .message-bubble {
-            max-width: 80%; padding: 12px 16px; border-radius: 14px; 
-            font-size: 14px; line-height: 1.6; word-wrap: break-word; position: relative;
-        }
+        .message-bubble { max-width: 80%; padding: 12px 16px; border-radius: 14px; font-size: 14px; line-height: 1.6; word-wrap: break-word; position: relative; }
         .message-row.ai .message-bubble { background: #fff; color: #333; border-top-left-radius: 2px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid #e0e0e0; }
         .message-row.user .message-bubble { background: #000; color: #fff; border-top-right-radius: 2px; }
 
-        /* ローディングアニメーション */
         .typing-indicator { display: flex; align-items: center; gap: 4px; padding: 4px 2px; }
         .typing-dot { width: 6px; height: 6px; background-color: #b0b0b0; border-radius: 50%; animation: typing 1.4s infinite ease-in-out both; }
         .typing-dot:nth-child(1) { animation-delay: -0.32s; }
         .typing-dot:nth-child(2) { animation-delay: -0.16s; }
         @keyframes typing { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
 
-        /* イベントカード */
         .event-suggestion { background: #fff; border: 1px solid #eee; border-radius: 10px; padding: 10px; margin-top: 8px; cursor: pointer; transition: 0.2s; display: flex; gap: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.03); text-decoration: none; color: inherit; max-width: 90%; align-self: flex-start; }
         .event-suggestion:hover { background: #fafafa; transform: translateY(-2px); border-color: #000; }
         .suggestion-thumb { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; background: #eee; flex-shrink: 0; }
@@ -101,16 +84,16 @@ async function sendMessage() {
     const text = input.value.trim();
     if (!text) return;
 
-    // 1. ユーザーの投稿を表示
     addMessage(text, 'user');
     input.value = '';
     saveHistory();
 
-    // 2. ローディングを表示（IDを控えておく）
     const loadingHtml = `
         <div class="typing-indicator">
             <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
         </div>`;
+    
+    // ここで返ってくるIDを使って削除する
     const loadingId = addMessage(loadingHtml, 'ai', true);
 
     try {
@@ -132,18 +115,15 @@ async function sendMessage() {
 
         const data = await response.json();
         
-        // ★重要：ここで必ずローディングを削除する！
+        // ★ローディング削除実行
         removeMessage(loadingId);
 
-        // 3. AIのメッセージがあれば表示（なければ表示しない）
         if (data.reply && data.reply.trim() !== "") {
             addMessage(data.reply, 'ai');
         } else if ((!data.recommendations || data.recommendations.length === 0)) {
-            // 万が一テキストもカードも無い場合
             addMessage("すみません、うまく情報が見つかりませんでした。", 'ai');
         }
 
-        // 4. おすすめカードがあれば表示
         if (data.recommendations && data.recommendations.length > 0) {
             const container = document.getElementById('chat-messages');
             data.recommendations.forEach(event => {
@@ -165,19 +145,22 @@ async function sendMessage() {
 
     } catch (error) {
         console.error(error);
-        // エラー時もローディングを消して、エラーを表示
         removeMessage(loadingId);
         addMessage(`⚠️ エラー: ${error.message}`, 'ai');
     }
 }
 
+// ★ここを修正しました！
 function addMessage(content, sender, isHtml = false) {
     const container = document.getElementById('chat-messages');
+    
     const row = document.createElement('div');
     row.classList.add('message-row', sender);
+    // ★行（row）自体にIDをつけることで、確実に消せるようにした
+    row.id = 'msg-' + Date.now() + Math.random();
+
     const bubble = document.createElement('div');
     bubble.classList.add('message-bubble');
-    bubble.id = 'msg-' + Date.now() + Math.random(); // ユニークID
 
     if (isHtml) bubble.innerHTML = content;
     else bubble.innerText = content;
@@ -185,10 +168,10 @@ function addMessage(content, sender, isHtml = false) {
     row.appendChild(bubble);
     container.appendChild(row);
     container.scrollTop = container.scrollHeight;
-    return row.id; // 行ごとのIDを返すように変更
+    
+    return row.id; // rowのIDを返す
 }
 
-// メッセージ削除用（ローディング消去に使う）
 function removeMessage(elementId) {
     const el = document.getElementById(elementId);
     if (el) el.remove();
