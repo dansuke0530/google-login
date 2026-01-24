@@ -6,6 +6,11 @@
     <title>マイページ</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+    
+    <script src="config.js"></script>
+
+    <script src="common.js"></script>
+
     <style>
         /* ★重要：判定が終わるまで画面を隠す（チラつき防止） */
         body { 
@@ -89,9 +94,7 @@
     </div>
 
     <script>
-        const supabaseUrl = 'https://daexakehxcvspmthpzzf.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhZXhha2VoeGN2c3BtdGhwenpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyMjc0ODgsImV4cCI6MjA4MzgwMzQ4OH0.xpHRjDPWlch_D80v1QQ9k_CJV6Q39pDa5f9qQ470rMI';
-        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+        // supabaseClient は config.js で定義済み！
 
         function showList() {
             document.getElementById('my-list-area').classList.add('active');
@@ -108,14 +111,13 @@
                 return;
             }
             
-            // ★ここがポイント！
-            // 管理者なら、画面を表示せずに裏で即座にリダイレクト
+            // 管理者リダイレクト
             if(user.email === 'kanaimori2024@gmail.com') {
                 window.location.href = 'super_admin.html';
                 return; 
             }
 
-            // 一般ユーザーと確定したら、はじめて画面をふわっと表示する
+            // 画面を表示
             document.body.style.opacity = '1';
 
             // データ取得開始
@@ -143,7 +145,5 @@
         }
         init();
     </script>
-
-    <script src="chat.js"></script>
 </body>
 </html>

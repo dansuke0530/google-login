@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - EventSite</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script src="config.js"></script>
+
+    <script src="common.js"></script>
+
     <style>
         /* --- 共通デザインベース --- */
         .login-wrapper {
@@ -72,7 +77,6 @@
     </style>
 </head>
 <body>
-    <script src="common.js"></script>
 
     <div class="login-wrapper">
         <h1 class="page-title">LOGIN</h1>
@@ -95,12 +99,12 @@
     </div>
 
     <script>
-        const supabaseUrl = 'https://daexakehxcvspmthpzzf.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhZXhha2VoeGN2c3BtdGhwenpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyMjc0ODgsImV4cCI6MjA4MzgwMzQ4OH0.xpHRjDPWlch_D80v1QQ9k_CJV6Q39pDa5f9qQ470rMI';
-        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+        // config.js が supabaseClient を作ってくれているので、
+        // ここでURLやKeyを定義する必要はありません！スッキリ！
 
         // 1. すでにログイン済みならマイページへ飛ばす
         async function checkSession() {
+            // supabaseClient は config.js から来ています
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) {
                 window.location.href = 'mypage.html';
@@ -113,13 +117,12 @@
             const { error } = await supabaseClient.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
+                    // リダイレクト先は元の設定のままにしています
                     redirectTo: 'https://dansuke0530.github.io/google-login/mypage.html'
                 }
             });
             if (error) alert(error.message);
         }
     </script>
-
-    <script src="chat.js"></script>
 </body>
 </html>

@@ -3,188 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>総合管理画面</title>
+    <title>スーパー管理画面</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+    
+    <script src="config.js"></script>
+
+    <script src="common.js"></script>
+
     <style>
-        /* チラつき防止：判定まで隠す */
         body { 
             font-family: 'Manrope', 'Noto Sans JP', sans-serif; 
-            margin: 0; padding: 0; background: #222; color: #fff; 
-            opacity: 0; transition: opacity 0.3s ease;
-        } 
-        
-        .wrapper { max-width: 800px; margin: 0 auto; padding: 60px 20px; } /* 幅をマイページと統一 */
-        
-        header { text-align: center; margin-bottom: 10px; }
-        h1 { margin: 0; font-size: 24px; font-weight: 800; letter-spacing: 1px; }
-        p.role { color: #00A3A0; font-size: 12px; font-weight: bold; margin-top: 5px; text-transform: uppercase; margin-bottom: 50px; }
-
-        /* メニューブロック（マイページと完全統一CSS） */
-        .menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 50px; }
-        
-        .menu-card { 
-            background: #333; padding: 30px 20px; border-radius: 12px; 
-            border: 1px solid #444; text-align: center; text-decoration: none; color: #fff;
-            transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            display: flex; flex-direction: column; align-items: center; justify-content: center; height: 180px; /* 高さ統一 */
+            margin: 0; padding: 0; background: #222; color: #fff; /* 管理者っぽくダークテーマ */
+            opacity: 0; transition: opacity 0.3s ease; 
         }
-        .menu-card:hover { transform: translateY(-5px); background: #000; border-color: #00A3A0; }
-        
-        .icon { font-size: 32px; margin-bottom: 15px; display: block; }
-        .card-title { font-weight: 800; font-size: 16px; margin-bottom: 5px; display: block; }
-        .card-desc { font-size: 11px; color: #aaa; display: block; }
 
-        /* 全リストエリア */
-        .dashboard-area { background: #fff; color: #333; border-radius: 12px; padding: 30px; min-height: 400px; display: none; }
-        .dashboard-area.active { display: block; animation: slideUp 0.4s ease; }
+        .wrapper { max-width: 1000px; margin: 0 auto; padding: 60px 20px; }
+        
+        .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; border-bottom: 1px solid #444; padding-bottom: 20px; }
+        h1 { font-size: 24px; font-weight: 800; letter-spacing: 1px; color: #fff; margin: 0; }
+        .admin-badge { background: red; color: white; padding: 4px 10px; font-size: 11px; border-radius: 4px; font-weight: bold; margin-left: 10px; }
 
-        .search-box { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 20px; }
-        .input-std { padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
-        
-        .event-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-        .event-table th { text-align: left; color: #999; font-size: 11px; padding: 10px; border-bottom: 2px solid #eee; }
-        .event-table td { padding: 15px 10px; border-bottom: 1px solid #eee; vertical-align: middle; }
-        .thumb { width: 50px; height: 50px; border-radius: 4px; object-fit: cover; background: #eee; }
-        
-        .btn-act { padding: 5px 12px; border-radius: 4px; font-size: 11px; font-weight: bold; text-decoration: none; border: 1px solid #ddd; color: #333; }
-        .btn-act:hover { background: #000; color: #fff; border-color: #000; }
-        .btn-del { color: #ccc; background: none; border: none; font-size: 16px; cursor: pointer; margin-left: 10px; }
-        .btn-del:hover { color: red; }
+        .btn-create { background: #fff; color: #000; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 13px; }
+        .btn-create:hover { opacity: 0.9; }
 
-        .logout-btn { display: block; text-align: center; margin-top: 40px; color: #666; font-size: 12px; text-decoration: none; }
-        
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        /* リストテーブル */
+        .event-table { width: 100%; border-collapse: collapse; background: #333; border-radius: 8px; overflow: hidden; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #444; font-size: 14px; }
+        th { background: #444; color: #ccc; font-size: 12px; font-weight: bold; }
+        tr:hover { background: #3a3a3a; }
+
+        .status-col { width: 80px; }
+        .action-col { width: 150px; text-align: right; }
+
+        .btn-action { display: inline-block; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 11px; margin-left: 5px; }
+        .btn-edit { background: #555; color: #fff; }
+        .btn-delete { background: #cc0000; color: #fff; cursor: pointer; border: none; }
+
+        .logout-area { margin-top: 40px; text-align: right; }
+        .btn-logout { color: #999; font-size: 12px; text-decoration: underline; cursor: pointer; }
     </style>
 </head>
 <body>
     <div class="wrapper">
-        <header>
-            <h1>SUPER ADMIN</h1>
-            <p class="role">総合管理者モード</p>
-        </header>
-
-        <div class="menu-grid">
-            <a href="admin.html" class="menu-card">
-                <span class="icon">📝</span>
-                <span class="card-title">新規イベント登録</span>
-                <span class="card-desc">管理者として作成</span>
-            </a>
-            <a href="javascript:void(0)" onclick="openDashboard()" class="menu-card">
-                <span class="icon">📊</span>
-                <span class="card-title">全イベント管理</span>
-                <span class="card-desc">すべてのデータを操作</span>
-            </a>
-            <a href="index.html" class="menu-card" style="background:#00A3A0; border-color:#00A3A0;">
-                <span class="icon">👀</span>
-                <span class="card-title">サイトを確認</span>
-                <span class="card-desc">トップページへ移動</span>
-            </a>
-        </div>
-
-        <div id="dashboard" class="dashboard-area">
-            <div class="search-box">
-                <input type="text" id="search-txt" class="input-std" placeholder="キーワード検索..." style="flex:1;" oninput="filterList()">
-                <input type="date" id="search-date" class="input-std" onchange="filterList()">
+        <div class="admin-header">
+            <div style="display:flex; align-items:center;">
+                <h1>SUPER ADMIN</h1>
+                <span class="admin-badge">MASTER ACCESS</span>
             </div>
-            
-            <table class="event-table">
-                <thead>
-                    <tr>
-                        <th width="60">IMG</th>
-                        <th>DATE</th>
-                        <th>TITLE / ID</th>
-                        <th width="100">ACTION</th>
-                    </tr>
-                </thead>
-                <tbody id="list-body"></tbody>
-            </table>
+            <a href="admin.html" class="btn-create">+ 新規イベント登録</a>
         </div>
 
-        <a href="#" onclick="logout()" class="logout-btn">ログアウト</a>
+        <table class="event-table">
+            <thead>
+                <tr>
+                    <th>日付</th>
+                    <th>タイトル</th>
+                    <th>ID</th>
+                    <th class="action-col">操作</th>
+                </tr>
+            </thead>
+            <tbody id="event-list-body">
+                </tbody>
+        </table>
+
+        <div class="logout-area">
+            <span onclick="logout()" class="btn-logout">ログアウト</span>
+        </div>
     </div>
 
     <script>
-        const supabaseUrl = 'https://daexakehxcvspmthpzzf.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhZXhha2VoeGN2c3BtdGhwenpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyMjc0ODgsImV4cCI6MjA4MzgwMzQ4OH0.xpHRjDPWlch_D80v1QQ9k_CJV6Q39pDa5f9qQ470rMI';
-        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+        // supabaseClient は config.js で定義済み！
         const ADMIN_EMAIL = "kanaimori2024@gmail.com";
-        let allData = [];
-
-        function openDashboard() {
-            document.getElementById('dashboard').classList.add('active');
-            document.getElementById('dashboard').scrollIntoView({ behavior: 'smooth' });
-        }
 
         async function init() {
-            // ユーザー取得
+            // 1. 権限チェック
             const { data: { user } } = await supabaseClient.auth.getUser();
-
-            // 権限チェック
+            
             if (!user || user.email !== ADMIN_EMAIL) {
-                // 権限がなければトップへ強制送還（画面は見せない）
+                // 管理者じゃなかったらトップへ追い出す
                 window.location.href = 'index.html';
                 return;
             }
 
-            // 権限OKなら、画面を表示する
+            // 画面表示
             document.body.style.opacity = '1';
 
-            // データ取得
-            const { data, error } = await supabaseClient.from('events').select('*').order('date', { ascending: false });
-            if(error) return alert("Error");
-            allData = data;
-            render(allData);
-        }
+            // 2. 全データの取得（フィルタなし！）
+            const { data: events, error } = await supabaseClient
+                .from('events')
+                .select('*')
+                .order('date', { ascending: false });
 
-        function render(list) {
-            const tbody = document.getElementById('list-body');
-            if(list.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px;">データなし</td></tr>';
+            if(error) {
+                alert("データ取得エラー: " + error.message);
                 return;
             }
-            tbody.innerHTML = list.map(ev => {
-                const img = ev.image_url || 'https://placehold.co/50x50/eee/ccc?text=No';
-                return `
+
+            const tbody = document.getElementById('event-list-body');
+            
+            if(events.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px; color:#999;">データがありません</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = events.map(ev => `
                 <tr>
-                    <td><img src="${img}" class="thumb"></td>
-                    <td style="color:#00A3A0; font-weight:bold;">${ev.date}</td>
-                    <td>
-                        <div style="font-weight:bold;">${ev.title}</div>
-                        <div style="font-size:10px; color:#999;">ID: ${ev.id}</div>
-                    </td>
-                    <td>
-                        <a href="edit.html?id=${ev.id}" class="btn-act">編集</a>
-                        <button onclick="del('${ev.id}')" class="btn-del">×</button>
+                    <td style="color:#aaa;">${ev.date}</td>
+                    <td style="font-weight:bold;">${ev.title}</td>
+                    <td style="font-family:monospace; color:#666; font-size:11px;">${ev.id.substring(0,8)}...</td>
+                    <td class="action-col">
+                        <a href="edit.html?id=${ev.id}" class="btn-action btn-edit">編集</a>
+                        <button onclick="deleteEvent('${ev.id}')" class="btn-action btn-delete">削除</button>
                     </td>
                 </tr>
-            `}).join('');
+            `).join('');
         }
 
-        function filterList() {
-            const txt = document.getElementById('search-txt').value.toLowerCase();
-            const date = document.getElementById('search-date').value;
-            const res = allData.filter(d => {
-                const matchT = (d.title||'').toLowerCase().includes(txt) || (d.id||'').includes(txt);
-                const matchD = date ? d.date === date : true;
-                return matchT && matchD;
-            });
-            render(res);
+        async function deleteEvent(id) {
+            if(!confirm("【警告】\n管理者権限でこのイベントを完全に削除します。\n本当によろしいですか？")) return;
+            
+            const { error } = await supabaseClient.from('events').delete().eq('id', id);
+            
+            if(error) alert("削除失敗: " + error.message);
+            else {
+                alert("削除しました");
+                location.reload(); // 画面更新
+            }
         }
 
-        async function del(id) {
-            if(!confirm("本当に削除しますか？")) return;
-            await supabaseClient.from('events').delete().eq('id', id);
-            allData = allData.filter(d => d.id !== id);
-            filterList();
-        }
         async function logout() {
             await supabaseClient.auth.signOut();
             window.location.href = 'index.html';
         }
+
         init();
     </script>
-
-    <script src="chat.js"></script>
 </body>
 </html>

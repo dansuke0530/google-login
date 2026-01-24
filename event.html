@@ -5,11 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Event Detail</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script src="config.js"></script>
+
+    <script src="common.js"></script>
+
     <style>
-        /* レイアウト（index.htmlと同じ） */
+        /* レイアウト（D4C風デザイン維持） */
         .wrapper { max-width: 1200px; margin: 0 auto; padding: 60px 30px; display: flex; gap: 60px; align-items: flex-start; }
-        main { flex: 3; width: 100%; }
-        aside { flex: 1; position: sticky; top: 100px; }
+        main { flex: 3; width: 100%; min-width: 0; }
+        aside { flex: 1; position: sticky; top: 100px; min-width: 300px; } /* サイドバーの幅を確保 */
 
         /* 詳細ページ専用デザイン */
         .detail-image-wrapper { width: 100%; margin-bottom: 40px; border-radius: 2px; overflow: hidden; }
@@ -22,62 +27,52 @@
 
         .detail-content { font-size: 15px; line-height: 2; color: #333; white-space: pre-wrap; margin-bottom: 60px; }
         
-        .btn-back { display: inline-block; border: 1px solid #ddd; padding: 10px 30px; border-radius: 50px; color: #666; font-size: 12px; font-weight: 600; }
-        .btn-back:hover { border-color: #000; color: #000; }
+        .btn-back { display: inline-block; border: 1px solid #ddd; padding: 10px 30px; border-radius: 50px; color: #666; font-size: 12px; font-weight: 600; text-decoration: none; transition: 0.3s; }
+        .btn-back:hover { border-color: #000; color: #000; background: #000; color: #fff; }
 
-        /* サイドバー */
-        .sidebar-box { margin-bottom: 50px; }
-        .sidebar-title { font-size: 12px; font-weight: 600; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 20px; letter-spacing: 0.1em; }
-        .tag-list span { display: inline-block; border: 1px solid #eee; padding: 6px 15px; font-size: 11px; margin: 0 5px 5px 0; border-radius: 50px; color: #666; pointer-events: none; } /* 詳細ページではタグはクリック不可にしておく */
-        
-        @media (max-width: 768px) { .wrapper { flex-direction: column; } aside { position: static; width: 100%; } }
+        @media (max-width: 768px) { .wrapper { flex-direction: column; } aside { position: static; width: 100%; margin-top: 40px; } }
     </style>
 </head>
 <body>
-    <script src="common.js"></script>
 
     <div class="wrapper">
         <main id="detail-area">
-            <p>Loading...</p>
+            <p style="padding: 20px;">Loading...</p>
         </main>
         
         <aside>
-            <div class="sidebar-box">
-                <div class="sidebar-title">TAGS</div>
-                <div class="tag-list">
-                    <span>集う</span>
-                    <span>学ぶ</span>
-                    <span>観る</span>
-                    <span>動く</span>
-                    <span>貢献する</span>
-                    <span>その他</span>
-                </div>
-            </div>
-            <div class="sidebar-box">
-                <div class="sidebar-title">NAVIGATION</div>
-                <a href="index.html" style="font-size:13px; color:#666;">Back to List →</a>
-            </div>
+            <div id="sidebar-placeholder"></div>
         </aside>
     </div>
 
     <script>
-        const supabaseUrl = 'https://daexakehxcvspmthpzzf.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhZXhha2VoeGN2c3BtdGhwenpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyMjc0ODgsImV4cCI6MjA4MzgwMzQ4OH0.xpHRjDPWlch_D80v1QQ9k_CJV6Q39pDa5f9qQ470rMI';
-        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
-
+        // 日付フォーマット関数
         function formatDate(str) {
             const d = new Date(str);
             return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
         }
 
+        // 詳細データ取得
         async function fetchDetail() {
             const params = new URLSearchParams(window.location.search);
             const id = params.get('id');
-            if(!id) return;
             
+            // IDがない場合は一覧に戻すかエラー表示
+            if(!id) {
+                document.getElementById('detail-area').innerHTML = "<p>イベントが見つかりません。</p><a href='index.html' class='btn-back'>一覧に戻る</a>";
+                return;
+            }
+            
+            // Supabaseからデータ取得
             const { data, error } = await supabaseClient.from('events').select('*').eq('id', id).single();
-            if(error) return document.getElementById('detail-area').innerText = "Error";
+            
+            if(error || !data) {
+                console.error(error);
+                document.getElementById('detail-area').innerText = "データの読み込みに失敗しました。";
+                return;
+            }
 
+            // HTML生成
             document.getElementById('detail-area').innerHTML = `
                 ${data.image_url ? `<div class="detail-image-wrapper"><img src="${data.image_url}" class="detail-image"></div>` : ''}
                 <div class="detail-header">
@@ -85,13 +80,17 @@
                     <span class="detail-date">${formatDate(data.date)}</span>
                     <h1 class="detail-title">${data.title}</h1>
                 </div>
-                <div class="detail-content">${data.description || ''}</div>
-                <a href="index.html" class="btn-back">Back to List</a>
+                <div class="detail-content">${data.description || '詳細情報はありません。'}</div>
+                <a href="index.html" class="btn-back">← Back to List</a>
             `;
         }
+        
+        // 実行
         fetchDetail();
     </script>
 
-    <script src="chat.js"></script>
+    <script src="sidebar.js"></script>
+
+    <script src="chat.js?v=2"></script>
 </body>
 </html>

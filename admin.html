@@ -5,10 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>イベント登録</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script src="config.js"></script>
+
+    <script src="common.js"></script>
+
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Manrope', 'Noto Sans JP', sans-serif; background: #f4f6f8; margin: 0; padding: 40px 20px; color: #333; }
-        .wrapper { max-width: 600px; margin: 0 auto; background: #fff; padding: 40px; border-radius: 12px; border: 1px solid #eee; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+        /* common.js との競合を防ぎつつ、ページ独自のデザインを適用 */
+        body { 
+            font-family: 'Manrope', 'Noto Sans JP', sans-serif; 
+            background: #f4f6f8; 
+            margin: 0; 
+            padding-bottom: 60px; /* 下に余白 */
+            color: #333; 
+        }
+        
+        /* ヘッダーの分だけ下に下げる調整（common.jsのヘッダーがstickyなので） */
+        .wrapper { 
+            max-width: 600px; 
+            margin: 60px auto 0; /* 上マージン追加 */
+            background: #fff; 
+            padding: 40px; 
+            border-radius: 12px; 
+            border: 1px solid #eee; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03); 
+        }
         
         h1 { font-size: 20px; font-weight: 800; text-align: center; margin-bottom: 30px; letter-spacing: 1px; }
         
@@ -74,13 +96,11 @@
         </div>
 
         <button class="btn-submit" onclick="addEvent()">イベントを登録する</button>
-        <a href="javascript:history.back()" class="back-link">キャンセルして戻る</a>
+        <a href="mypage.html" class="back-link">キャンセルして戻る</a>
     </div>
 
     <script>
-        const supabaseUrl = 'https://daexakehxcvspmthpzzf.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhZXhha2VoeGN2c3BtdGhwenpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyMjc0ODgsImV4cCI6MjA4MzgwMzQ4OH0.xpHRjDPWlch_D80v1QQ9k_CJV6Q39pDa5f9qQ470rMI';
-        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+        // supabaseClient は config.js で作成済み！
 
         async function addEvent() {
             const title = document.getElementById('title').value;
@@ -92,11 +112,17 @@
 
             if (!title || !startDate) return alert("タイトルと日付は必須です");
 
+            // ログイン確認
             const { data: { user } } = await supabaseClient.auth.getUser();
-            if(!user) return alert("ログインしてください");
+            if(!user) {
+                alert("ログインセッションが切れました。再度ログインしてください。");
+                window.location.href = 'login.html';
+                return;
+            }
 
             try {
                 let imageUrl = null;
+                // 画像アップロード処理
                 if (imageFile) {
                     const fileName = Date.now() + '_' + imageFile.name;
                     await supabaseClient.storage.from('images').upload(fileName, imageFile);
@@ -104,20 +130,26 @@
                     imageUrl = data.publicUrl;
                 }
 
+                // データ登録処理
                 const { error } = await supabaseClient.from('events').insert([{
-                    title, category, short_desc, description, date: startDate, 
-                    image_url: imageUrl, user_id: user.id
+                    title, 
+                    category, 
+                    short_desc, 
+                    description, 
+                    date: startDate, 
+                    image_url: imageUrl, 
+                    user_id: user.id
                 }]);
 
                 if (error) throw error;
-                alert("登録しました！");
+                
+                alert("イベントを登録しました！");
                 window.location.href = 'mypage.html';
             } catch (error) {
-                alert("エラー: " + error.message);
+                console.error(error);
+                alert("エラーが発生しました: " + error.message);
             }
         }
     </script>
-
-    <script src="chat.js"></script>
 </body>
 </html>
